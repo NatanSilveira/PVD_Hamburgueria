@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesa {{ mesa }} - Dom Burguer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <audio id="som_pronto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+</head>
+<body>
+
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="toggleMenu()">&times;</a>
+        <h2>Dom Burguer</h2>
+        <a href="/?mesa={{ mesa }}">🍽️ Cardápio</a>
+        <a href="/cozinha">👨‍🍳 Cozinha</a>
+        <a href="/admin">⚙️ Admin</a>
+    </div>
+
+    <header class="header-mini">
+        <div class="logo-mini">
+            <span class="material-icons menu-btn" onclick="toggleMenu()">menu</span>
+            DOM BURGUER
+        </div>
+        
+        <div id="aviso-global" class="aviso-topo" style="display: none;" onclick="irParaMesaPronta()">
+            <span class="material-icons">notifications_active</span>
+            <span id="texto-aviso-global"></span>
+        </div>
+
+        <div class="controles-mini">
+            <div class="input-group-mini" style="max-width: 100px;">
+                <label>Mesa</label>
+                <input type="text" inputmode="numeric" id="input-mesa" value="{{ mesa }}" list="lista-mesas" 
+                       onchange="mudarMesa()" onclick="this.value=''" placeholder="#"
+                       class="input-mini" style="text-align: center;">
+                
+                <datalist id="lista-mesas">
+                    {% for m_ativa in mesas_ativas %}
+                        <option value="{{ m_ativa }}">Mesa {{ m_ativa }} (Aberta)</option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            <div class="input-group-mini" style="flex: 1; max-width: 200px;">
+                <label><span class="material-icons" style="font-size: 14px;">person</span></label>
+                <input type="text" id="input-cliente" value="{{ cliente }}" placeholder="Cliente..." class="input-mini">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        
+        <div id="alerta-pronto" class="alerta-flutuante" style="display:none; flex-direction: column; align-items: flex-start; gap: 10px; width: 90%; left: 5%;">
+            <div style="font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+                <span class="material-icons" style="background: white; color: #FF9800; border-radius: 50%; padding: 5px;">restaurant</span>
+                Pedido desta Mesa Pronto!
+            </div>
+            <a href="/garcom_confirma/{{ mesa }}" class="btn-padrao bg-green" style="text-decoration: none; width: 100%; text-align: center; padding: 12px 0; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                ✅ JÁ PEGUEI / SERVIDO
+            </a>
+        </div>
+
+        {% if ativos %}
+        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #FF9800;">
+            <h3 style="margin-top: 0; color: #444; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between;">
+                <span>⏳ Acompanhamento</span>
+                <span style="font-weight: normal; font-size: 0.9rem; color: #777;">{{ cliente }}</span>
+            </h3>
+            <ul style="list-style: none; padding: 0;">
+                {% for item in ativos %}
+                    <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee;">
+                        <span style="font-size: 0.95rem;">{{ item.produto_nome }}</span>
+                        <span class="text-{{ item.status|lower }}">
+                            {% if item.status == 'Pronto' %} 🔔 PRONTO {% else %} {{ item.status }} {% endif %}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% for nome_categoria, itens in categorias.items() %}
+            <h2 class="titulo-categoria">{{ nome_categoria }}</h2>
+            <div class="grid-produtos">
+                {% for item in itens %}
+                <form action="/adicionar_item" method="POST" class="card-produto" onsubmit="prepararEnvio(this)">
+                    <input type="hidden" name="mesa" value="{{ mesa }}">
+                    <input type="hidden" name="cliente_nome" class="hidden-cliente">
+                    <input type="hidden" name="nome_produto" value="{{ item.nome }}">
+                    <input type="hidden" name="preco" value="{{ item.preco }}">
+                    <div class="info-produto">
+                        <strong>{{ item.nome }}</strong>
+                        <small>{{ item.desc }}</small>
+                        <span class="preco">R$ {{ item.preco }}</span>
+                    </div>
+                    <div class="acoes-produto">
+                        <input type="text" name="observacao" class="input-obs" placeholder="Obs...">
+                        <button type="submit" class="btn-add"><span class="material-icons">add</span></button>
+                    </div>
+                </form>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <div style="height: 120px;"></div>
+    </div>
+
+    <div class="bottom-sheet">
+        <div class="resumo-carrinho" onclick="toggleCarrinho()">
+            <span>📝 Comanda ({{ carrinho|length }} itens novos)</span>
+            <span class="material-icons">expand_less</span>
+        </div>
+        <div id="lista-carrinho" class="conteudo-carrinho {% if carrinho_aberto %}aberto{% endif %}">
+            {% if carrinho|length == 0 %}
+                <p style="text-align: center; color: #666; padding-top: 20px;">Comanda vazia.</p>
+            {% else %}
+                <ul class="lista-itens-carrinho">
+                    {% for p in carrinho %}
+                    <li>
+                        <div><strong>{{ p.produto_nome }}</strong> <small>{{ p.observacao }}</small></div>
+                        <div style="display: flex; align-items: center;">
+                            R$ {{ p.preco }}
+                            <a href="/cancelar_item/{{ p.id }}" class="btn-remove"><span class="material-icons">close</span></a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <a href="/enviar_cozinha/{{ mesa }}" class="btn-enviar-cozinha">ENVIAR PEDIDO 🚀</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="dados-sistema" 
+         data-mesa="{{ mesa }}" 
+         data-qtd-ativos="{{ ativos|length }}" 
+         data-qtd-carrinho="{{ carrinho|length }}" 
+         style="display: none;">
+    </div>
+
+    <script>
+        let assinaturaAtual = ""; 
+        let mesasProntasGlobais = [];
+
+        function toggleMenu() {
+            var el = document.getElementById("sidebar");
+            el.style.width = el.style.width === "250px" ? "0" : "250px";
+        }
+        function toggleCarrinho() {
+            document.getElementById("lista-carrinho").classList.toggle("aberto");
+        }
+        function mudarMesa() {
+            var novaMesa = document.getElementById('input-mesa').value;
+            if(novaMesa) {
+                window.location.href = '/?mesa=' + novaMesa;
+            }
+        }
+        
+        function prepararEnvio(form) {
+            var dados = document.getElementById('dados-sistema').dataset;
+            var nome = document.getElementById('input-cliente').value;
+            form.querySelector('.hidden-cliente').value = nome;
+            localStorage.setItem('cliente_mesa_' + dados.mesa, nome);
+        }
+        
+        function irParaMesaPronta() {
+            if(mesasProntasGlobais.length > 0) {
+                window.location.href = '/?mesa=' + mesasProntasGlobais[0];
+            }
+        }
+
+        window.onload = function() {
+            var dados = document.getElementById('dados-sistema').dataset;
+            var mesaID = dados.mesa; 
+            
+            // FIX: Agora olhamos ATIVOS (Cozinha) E CARRINHO (Novos)
+            var qtdTotal = parseInt(dados.qtdAtivos) + parseInt(dados.qtdCarrinho);
+
+            var input = document.getElementById('input-cliente');
+            
+            // Se a mesa estiver TOTALMENTE vazia (sem pedido na cozinha e sem nada no carrinho)
+            if (qtdTotal === 0) {
+                console.log("Mesa 100% livre! Limpando nome...");
+                localStorage.removeItem('cliente_mesa_' + mesaID);
+                input.value = ""; 
+            } else {
+                // Se tem alguma coisa (mesmo que seja só no carrinho), recupera o nome
+                if(input.value === "") {
+                    var salvo = localStorage.getItem('cliente_mesa_' + mesaID);
+                    if(salvo) input.value = salvo;
+                }
+            }
+
+            fetch('/api/status_mesa/' + mesaID).then(r => r.json()).then(data => { assinaturaAtual = data.assinatura; });
+        }
+
+        setInterval(function() {
+            var dados = document.getElementById('dados-sistema').dataset;
+            var mesaID = dados.mesa;
+
+            // 1. Avisos Globais
+            fetch('/api/mesas_prontas').then(r => r.json()).then(data => {
+                var aviso = document.getElementById('aviso-global');
+                mesasProntasGlobais = data.mesas_prontas;
+                
+                if (data.mesas_prontas.length > 0) {
+                    aviso.style.display = 'flex';
+                    document.getElementById('texto-aviso-global').innerText = "PRONTO: Mesa " + data.mesas_prontas.join(", ");
+                    
+                    var alertaLocal = document.getElementById('alerta-pronto');
+                    if(alertaLocal.style.display == 'none') {
+                         document.getElementById('som_pronto').play().catch(e => {});
+                    }
+                } else {
+                    aviso.style.display = 'none';
+                }
+            });
+
+            // 2. Mesa Atual
+            fetch('/api/status_mesa/' + mesaID).then(r => r.json()).then(data => {
+                var alerta = document.getElementById('alerta-pronto');
+                if (data.tem_pronto) {
+                    if (alerta.style.display === 'none') {
+                        alerta.style.display = 'flex';
+                    }
+                } else {
+                    alerta.style.display = 'none';
+                }
+
+                if (assinaturaAtual !== "" && data.assinatura !== assinaturaAtual) {
+                    if (document.activeElement.tagName !== "INPUT") {
+                        window.location.reload();
+                    }
+                }
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+/* --- VARIÁVEIS DE CORES --- */
+:root {
+    --primary: #FF9800; --primary-dark: #F57C00;
+    --dark: #212121; --light: #f5f5f5; --white: #ffffff;
+    --green: #4CAF50; --red: #f44336; --blue: #2196F3;
+    --gray-light: #e0e0e0;
+    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--light); color: #333; padding-bottom: 80px; }
+
+/* --- SIDEBAR --- */
+.sidebar { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.3s; padding-top: 60px; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
+.sidebar h2 { color: white; padding-left: 20px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+.sidebar a { padding: 15px 20px; text-decoration: none; font-size: 1.1rem; color: #bbb; display: block; transition: 0.2s; border-left: 3px solid transparent; }
+.sidebar a:hover { color: white; background: #222; border-left: 3px solid var(--primary); }
+.sidebar .closebtn { position: absolute; top: 10px; right: 20px; font-size: 30px; margin-left: 0; color: #888; cursor: pointer; }
+
+/* --- HEADERS --- */
+.top-bar, .header-mini { background-color: var(--dark); color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+.menu-icon, .menu-btn { font-size: 24px; cursor: pointer; color: white; margin-right: 15px; }
+.logo-area, .logo-mini { font-weight: bold; font-size: 1.2rem; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+
+/* Controles do Cardápio Minimalista */
+.controles-mini { display: flex; gap: 10px; flex: 1; justify-content: flex-end; }
+.input-group-mini { position: relative; display: flex; align-items: center; background: #333; border-radius: 4px; padding: 0 5px; border: 1px solid #444; }
+.input-group-mini label { color: #888; font-size: 0.7rem; margin-right: 5px; text-transform: uppercase; font-weight: bold; }
+.input-mini { background: transparent; border: none; color: white; padding: 8px 5px; font-size: 0.95rem; width: 100%; outline: none; font-weight: 500; }
+
+/* --- NOTIFICAÇÃO GLOBAL --- */
+.aviso-topo { background-color: var(--green); color: white; font-weight: bold; font-size: 0.85rem; padding: 5px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; cursor: pointer; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+/* --- CARDÁPIO & GRID --- */
+.container { padding: 20px; max-width: 1000px; margin: 0 auto; }
+.titulo-categoria { border-left: 5px solid var(--primary); padding-left: 10px; margin-top: 20px; color: var(--dark); }
+.grid-produtos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+
+.card-produto { background: var(--white); border-radius: 10px; padding: 15px; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; }
+.info-produto strong { display: block; font-size: 1.1rem; margin-bottom: 4px; }
+.info-produto small { color: #666; font-size: 0.85rem; display: block; margin-bottom: 5px; }
+.info-produto .preco { display: block; color: var(--green); font-weight: bold; font-size: 1.1rem; }
+
+.acoes-produto { display: flex; align-items: center; gap: 10px; }
+.input-obs { width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem; height: 35px; box-sizing: border-box;}
+.btn-add { background: var(--primary); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: none; cursor: pointer; transition: 0.2s; font-weight: bold; font-size: 1.5rem; line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.btn-add:hover { background: var(--primary-dark); transform: scale(1.1); }
+
+/* --- BARRA FIXA (GAVETA) --- */
+.bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 500; }
+.resumo-carrinho { padding: 15px 20px; background: var(--dark); color: white; font-weight: bold; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; justify-content: space-between; cursor: pointer; }
+.conteudo-carrinho { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; padding: 0 15px; }
+.conteudo-carrinho.aberto { max-height: 400px; overflow-y: auto; padding-bottom: 20px; }
+.lista-itens-carrinho { list-style: none; padding: 0; margin: 0; }
+.lista-itens-carrinho li { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 12px 0; }
+.btn-remove { color: var(--red); margin-left: 15px; cursor: pointer; text-decoration: none; font-weight: bold;}
+
+/* --- TABELAS DO ADMIN --- */
+.tabela-admin { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); margin-top: 20px; }
+.tabela-admin thead { background-color: #333; color: white; }
+.tabela-admin th, .tabela-admin td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+.tabela-admin tr:last-child td { border-bottom: none; }
+.detalhe-row { display: none; background-color: #fafafa; }
+.detalhe-content { padding: 20px; border-left: 4px solid var(--primary); }
+
+/* --- BOTÕES GERAIS E ADMIN --- */
+.btn-padrao, .btn-enviar-cozinha { background: var(--green); color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; display: block; text-align: center; text-decoration: none; font-size: 1rem; }
+.btn-pequeno { padding: 5px 12px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: bold; text-decoration: none; display: inline-block; }
+.btn-expandir { background: var(--gray-light); color: #333; }
+.btn-receber { background: var(--green); color: white; }
+.btn-excluir { background: #ffebee; color: var(--red); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+
+/* --- DASHBOARD --- */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+.dash-card { background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 15px; border-bottom: 3px solid transparent; }
+.dash-card.blue { border-bottom-color: var(--blue); }
+.dash-card.green { border-bottom-color: var(--green); }
+.dash-card.orange { border-bottom-color: var(--primary); }
+.dash-icon { font-size: 2rem; opacity: 0.2; }
+.dash-info h3 { margin: 0; font-size: 1.5rem; }
+.dash-info p { margin: 0; color: #777; font-size: 0.9rem; }
+
+/* --- ABAS --- */
+.abas-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px; overflow-x: auto;}
+.aba-btn { background-color: #e0e0e0; color: #555; border: none; padding: 12px 20px; font-size: 1rem; cursor: pointer; border-radius: 5px; white-space: nowrap; font-weight: 500; transition: 0.2s; position: relative; z-index: 10; }
+.aba-btn:hover { background-color: #d5d5d5; transform: translateY(-2px); }
+.aba-btn.ativa { background-color: var(--primary); color: white; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.conteudo-aba { display: none; }
+.conteudo-aba.ativa { display: block; animation: fadeIn 0.3s; }
+
+/* --- COZINHA E ALERTA --- */
+.pedido-item { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); border-left: 10px solid #ccc; }
+.btn-acao { padding: 10px 15px; border-radius: 5px; text-decoration: none; color: white; font-weight: bold; display: inline-block; }
+.bg-blue { background-color: var(--blue); } .bg-green { background-color: var(--green); }
+.alerta-flutuante { position: fixed; top: 80px; left: 5%; width: 90%; background: #FF9800; color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 900; display: flex; align-items: center; gap: 10px; font-weight: bold; }
+
+/* --- CORES DE STATUS (NOVO: PARA ELIMINAR ERROS NO HTML) --- */
+.status-pendente { border-left-color: var(--primary) !important; color: var(--primary); }
+.status-preparando { border-left-color: var(--blue) !important; color: var(--blue); }
+.status-pronto { border-left-color: var(--green) !important; color: var(--green); }
+.status-entregue { border-left-color: #555 !important; color: #555; }
+
+/* Classes específicas para texto */
+.text-pendente { color: var(--primary); font-weight: bold; }
+.text-preparando { color: var(--blue); font-weight: bold; }
+.text-pronto { color: var(--green); font-weight: bold; }
+.text-entregue { color: #777; font-weight: normal; text-decoration: line-through; }
+
+/* --- AJUSTES FINAIS PARA CELULAR (MOBILE PERFECT) --- */
+@media (max-width: 768px) {
+    /* Ajusta margens para ganhar espaço na tela pequena */
+    .container { padding: 10px; max-width: 100%; }
+    
+    /* Faz a tabela do Admin rolar para o lado se não couber */
+    .tabela-admin { 
+        display: block; 
+        overflow-x: auto; 
+        white-space: nowrap; 
+    }
+    
+    /* Aumenta um pouco os botões para facilitar o toque do dedo */
+    .btn-pequeno { padding: 8px 15px; font-size: 0.9rem; }
+    
+    /* Ajusta o tamanho do texto dos produtos */
+    .info-produto strong { font-size: 1rem; }
+    .info-produto small { font-size: 0.8rem; }
+    
+    /* Garante que o input de mesa não fique gigante */
+    .input-group-mini { max-width: 80px; }
+}

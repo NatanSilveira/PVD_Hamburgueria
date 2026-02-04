@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozinha - Dom Burguer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <audio id="som_novo_pedido" src="https://actions.google.com/sounds/v1/cartoon/cartoon_cowbell.ogg"></audio>
+</head>
+<body class="modo-cozinha">
+
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="toggleMenu()">&times;</a>
+        <h2>Dom Burguer</h2>
+        <a href="/">🍽️ Cardápio</a>
+        <a href="/cozinha">👨‍🍳 Cozinha</a>
+        <a href="/admin">⚙️ Admin</a>
+    </div>
+
+    <header class="top-bar" style="justify-content: space-between; background-color: #212121;">
+        <div style="display: flex; align-items: center;">
+            <span class="menu-icon" onclick="toggleMenu()">&#9776;</span>
+            <h1>👨‍🍳 Fila de Produção</h1>
+        </div>
+        <button onclick="ativarSom()" style="font-size: 0.8rem; background: #444; color: white; border: none; padding: 8px; border-radius: 4px;">🔔 Ativar Sino</button>
+    </header>
+
+    <div class="container">
+        {% if comandas|length == 0 %}
+            <div style="text-align: center; margin-top: 50px; color: #777;">
+                <h2>Tudo limpo! ✨</h2>
+                <p>Aguardando novos pedidos...</p>
+            </div>
+        {% endif %}
+
+        {% for comanda in comandas %}
+            <div class="pedido-item status-{{ comanda.status|lower }}">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div>
+                        <strong style="font-size: 1.5rem;">MESA {{ comanda.mesa }}</strong>
+                        <br>
+                        <div style="font-size: 1.2rem; color: #555; font-weight: bold; margin-bottom: 5px;">👤 {{ comanda.cliente }}</div>
+                        <small>🕒 {{ comanda.hora }} | #{{ comanda.id }}</small>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-weight: bold; text-transform: uppercase; color: #555;">{{ comanda.status }}</span>
+                    </div>
+                </div>
+
+                <ul style="list-style: none; padding: 0;">
+                    {% for item in comanda.itens %}
+                        <li style="padding: 5px 0; font-size: 1.1rem; border-bottom: 1px dashed #eee;">
+                            • <strong>{{ item.produto_nome }}</strong>
+                            {% if item.observacao %}
+                                <br><span style="color: red; background: #ffebee; padding: 2px 5px; border-radius: 4px; font-size: 0.85rem;">⚠️ {{ item.observacao }}</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <div style="margin-top: 15px; text-align: right;">
+                    {% if comanda.status == 'Pendente' %}
+                        <a href="/iniciar_preparo/{{ comanda.id }}" class="btn-acao bg-blue">👨‍🍳 INICIAR PREPARO</a>
+                    {% elif comanda.status == 'Preparando' %}
+                        <a href="/marcar_pronto/{{ comanda.id }}" class="btn-acao bg-green">✅ PRONTO PARA ENTREGA</a>
+                    {% elif comanda.status == 'Pronto' %}
+                        <span style="color: green; font-weight: bold; font-size: 1.1rem; margin-right: 10px;">🔔 CHAMANDO GARÇOM...</span>
+                        <a href="/finalizar_entrega/{{ comanda.id }}" style="font-size: 0.8rem; color: #999; text-decoration: underline;">(Já entregou?)</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        let assinaturaAtual = ""; // Começa vazio
+
+        function toggleMenu() {
+            var el = document.getElementById("sidebar");
+            el.style.width = el.style.width === "250px" ? "0" : "250px";
+        }
+        function ativarSom() {
+            var audio = document.getElementById('som_novo_pedido');
+            audio.play().catch(e=>{}); audio.pause();
+            alert("Sino ativado!");
+        }
+
+        // LÓGICA DE AUTO-UPDATE CORRIGIDA
+        // Pega o estado inicial assim que carrega
+        fetch('/api/checar_novos_pedidos').then(r => r.json()).then(data => {
+            assinaturaAtual = data.assinatura;
+            console.log("Estado inicial cozinha:", assinaturaAtual);
+        });
+
+        setInterval(function() {
+            fetch('/api/checar_novos_pedidos').then(r => r.json()).then(data => {
+                // 1. Toca som se tiver pendente
+                if (data.som_alert) {
+                     var audio = document.getElementById('som_novo_pedido');
+                     audio.play().catch(e => console.log("Interação necessária para som"));
+                }
+
+                // 2. Verifica se houve MUDANÇA de estado (Qualquer status)
+                if (assinaturaAtual !== "" && data.assinatura !== assinaturaAtual) {
+                    console.log("Mudança detectada (" + assinaturaAtual + " -> " + data.assinatura + "). Atualizando...");
+                    window.location.reload();
+                }
+            });
+        }, 3000); // Checa a cada 3 segundos
+    </script>
+</body>
+</html>

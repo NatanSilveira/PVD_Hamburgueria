@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Dom Burguer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            .area-impressao, .area-impressao * { visibility: visible; }
+            .area-impressao { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; color: black; background: white; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar" class="sidebar no-print">
+        <a href="javascript:void(0)" class="closebtn" onclick="toggleMenu()">&times;</a>
+        <h2>Dom Burguer</h2>
+        <a href="/"><span class="material-icons" style="vertical-align: middle; margin-right: 10px;">restaurant_menu</span> Cardápio</a>
+        <a href="/cozinha"><span class="material-icons" style="vertical-align: middle; margin-right: 10px;">soup_kitchen</span> Cozinha</a>
+        <a href="/admin" style="color: white; border-left: 3px solid #FF9800; background: #222;"><span class="material-icons" style="vertical-align: middle; margin-right: 10px;">settings</span> Admin</a>
+    </div>
+
+    <header class="top-bar no-print">
+        <div class="logo-area">
+            <span class="material-icons menu-icon" onclick="toggleMenu()">menu</span>
+            PAINEL GERENCIAL
+        </div>
+        <div style="font-size: 0.9rem; opacity: 0.8; font-weight: bold;">DOM BURGUER</div>
+    </header>
+
+    <div class="container no-print">
+
+        <div class="dashboard-grid">
+            <div class="dash-card blue">
+                <span class="material-icons dash-icon">table_restaurant</span>
+                <div class="dash-info">
+                    <h3>{{ mesas|length }}</h3>
+                    <p>Mesas Ocupadas</p>
+                </div>
+            </div>
+            <div class="dash-card green">
+                <span class="material-icons dash-icon">hourglass_top</span>
+                <div class="dash-info">
+                    {% set total_aberto = namespace(value=0) %}
+                    {% for m in mesas.values() %} {% set total_aberto.value = total_aberto.value + m.total_final %} {% endfor %}
+                    <h3>R$ {{ "%.2f"|format(total_aberto.value) }}</h3>
+                    <p>A Receber (Mesas)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="abas-container">
+            <button type="button" id="btn-comandas" class="aba-btn ativa" onclick="abrirAba('comandas')">💰 Caixa (Aberto)</button>
+            <button type="button" id="btn-fechamento" class="aba-btn" onclick="abrirAba('fechamento')">📜 Fechamento</button>
+            <button type="button" id="btn-produtos" class="aba-btn" onclick="abrirAba('produtos')">🍔 Cardápio</button>
+            <button type="button" id="btn-ajustes" class="aba-btn" onclick="abrirAba('ajustes')">🔧 Configurações</button>
+        </div>
+
+        <div id="comandas" class="conteudo-aba ativa">
+            {% if mesas|length == 0 %}
+                <div style="text-align: center; padding: 40px; color: #999; background: white; border-radius: 8px;">
+                    <span class="material-icons" style="font-size: 48px; display: block; margin-bottom: 10px;">check_circle_outline</span>
+                    Nenhuma conta aberta.
+                </div>
+            {% else %}
+            <table class="tabela-admin">
+                <thead><tr><th>Mesa</th><th>Cliente</th><th>Total</th><th>Ações</th></tr></thead>
+                <tbody>
+                    {% for numero_mesa, dados in mesas.items() %}
+                    <tr>
+                        <td><span style="background:#222; color:white; padding:5px 10px; border-radius:50px;">{{ numero_mesa }}</span></td>
+                        <td><strong>{{ dados.cliente if dados.cliente else '---' }}</strong></td>
+                        <td style="color: green; font-weight: bold;">R$ {{ "%.2f"|format(dados.total_final) }}</td>
+                        <td>
+                            <button class="btn-pequeno btn-expandir" onclick="toggleDetalhes('detalhe-{{ numero_mesa }}')">Detalhes</button>
+                            <a href="/admin/fechar_conta/{{ numero_mesa }}" onclick="return confirm('Receber pagamento?')" class="btn-pequeno btn-receber">Receber</a>
+                        </td>
+                    </tr>
+                    <tr id="detalhe-{{ numero_mesa }}" class="detalhe-row">
+                        <td colspan="4" style="padding:0;">
+                            <div class="detalhe-content">
+                                <ul style="list-style:none; padding:0;">
+                                    {% for item in dados.itens %}
+                                    <li style="display:flex; justify-content:space-between; border-bottom:1px dashed #ddd; padding:5px 0;">
+                                        <span>{{ item.produto_nome }} <small>({{ item.status }})</small></span><span>R$ {{ item.preco }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                <div style="text-align:right; margin-top:10px;">
+                                    <small>Taxa ({{ config.taxa_servico }}%): R$ {{ "%.2f"|format(dados.taxa) }}</small><br>
+                                    <strong>Total: R$ {{ "%.2f"|format(dados.total_final) }}</strong>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+
+        <div id="fechamento" class="conteudo-aba">
+            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span class="material-icons">calendar_today</span> Filtro
+                </h3>
+                <form action="/admin" method="GET" style="margin: 0;">
+                    <input type="hidden" name="tab" value="fechamento">
+                    <input type="date" name="data" value="{{ data_atual }}" onchange="this.form.submit()" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </form>
+            </div>
+
+            <div class="dash-card" style="margin-bottom: 20px; border-left: 5px solid var(--primary); background: #fffbe6;">
+                <div>
+                    <h3 style="margin-top:0;">Resumo Financeiro ({{ data_atual.strftime('%d/%m/%Y') }})</h3>
+                    <div>Faturamento Total (Bruto): <strong>R$ {{ "%.2f"|format(total_dia) }}</strong></div>
+                    <div style="color: #d32f2f;">Taxa de Garçom (Repassar): <strong>R$ {{ "%.2f"|format(total_taxa) }}</strong></div>
+                    <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
+                    <div style="color:green; font-weight:bold; font-size:1.1rem;">Líquido da Casa: R$ {{ "%.2f"|format(total_dia - total_taxa) }}</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:10px;">Comprovantes Emitidos</h3>
+            
+            {% if historico|length == 0 %}
+                <p style="color: #777;">Nenhum pagamento registrado nesta data.</p>
+            {% else %}
+                <table class="tabela-admin">
+                    <thead><tr><th>Hora</th><th>Mesa/Cliente</th><th>Total Pago</th><th>Detalhes</th></tr></thead>
+                    <tbody>
+                        {% for recibo in historico %}
+                        <tr>
+                            <td>{{ recibo.hora }}</td>
+                            <td>Mesa {{ recibo.mesa }} <br> <small>{{ recibo.cliente }}</small></td>
+                            <td style="font-weight:bold;">R$ {{ "%.2f"|format(recibo.total_final) }}</td>
+                            <td>
+                                <button class="btn-pequeno btn-expandir" onclick="toggleDetalhes('recibo-{{ loop.index }}')">Ver Recibo</button>
+                                <button class="btn-pequeno btn-expandir" onclick="imprimirRecibo('recibo-print-{{ loop.index }}')">🖨️ Imprimir</button>
+                            </td>
+                        </tr>
+                        <tr id="recibo-{{ loop.index }}" class="detalhe-row">
+                            <td colspan="4" style="padding:0;">
+                                <div id="recibo-print-{{ loop.index }}" class="area-impressao-conteudo" style="padding: 20px; border: 1px solid #ccc; background: white; max-width: 300px; margin: 10px auto;">
+                                    <h3 style="text-align: center; margin: 0 0 10px;">DOM BURGUER</h3>
+                                    <p style="text-align: center; font-size: 0.9rem; margin-bottom: 15px;">Comprovante de Venda</p>
+                                    <div style="border-bottom: 1px dashed #000; margin-bottom: 10px;"></div>
+                                    <div><strong>Data:</strong> {{ data_atual.strftime('%d/%m/%Y') }} - {{ recibo.hora }}</div>
+                                    <div><strong>Mesa:</strong> {{ recibo.mesa }}</div>
+                                    <div><strong>Cliente:</strong> {{ recibo.cliente }}</div>
+                                    <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
+                                    <ul style="list-style: none; padding: 0; margin: 0;">
+                                        {% for item in recibo.itens %}
+                                        <li style="display: flex; justify-content: space-between;">
+                                            <span>{{ item.produto_nome }}</span>
+                                            <span>{{ "%.2f"|format(item.preco) }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
+                                    <div style="text-align: right;">Subtotal: R$ {{ "%.2f"|format(recibo.subtotal) }}</div>
+                                    <div style="text-align: right;">Serviço ({{ config.taxa_servico }}%): R$ {{ "%.2f"|format(recibo.taxa) }}</div>
+                                    <h3 style="text-align: right; margin-top: 5px;">TOTAL: R$ {{ "%.2f"|format(recibo.total_final) }}</h3>
+                                    <div style="text-align: center; margin-top: 20px; font-size: 0.8rem;">Obrigado pela preferência!</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <div id="produtos" class="conteudo-aba">
+            <div class="form-admin">
+                <form action="/admin" method="POST">
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" name="nome" placeholder="Produto" required style="flex:2;">
+                        <input type="number" step="0.01" name="preco" placeholder="R$" required style="flex:1;">
+                        <input type="text" name="categoria" list="cats" placeholder="Categoria" required style="flex:1;">
+                        <datalist id="cats"><option value="🍔 Hambúrgueres"><option value="🥤 Bebidas"></datalist>
+                    </div>
+                    <textarea name="descricao" placeholder="Descrição (Ex: Pão brioche, 160g carne, queijo...)" rows="2" style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"></textarea>
+                    
+                    <button type="submit" class="btn-padrao" style="margin-top: 10px;">Salvar</button>
+                </form>
+            </div>
+            <table class="tabela-admin">
+                <tbody>
+                    {% for p in produtos %}
+                    <tr>
+                        <td><strong>{{ p.nome }}</strong><br><small style="color: #777;">{{ p.descricao }}</small></td>
+                        <td>{{ p.categoria }}</td>
+                        <td>R$ {{ p.preco }}</td>
+                        <td><a href="/admin/deletar/{{ p.id }}" class="btn-excluir"><span class="material-icons" style="font-size:16px;">delete</span></a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="ajustes" class="conteudo-aba">
+            <div class="form-admin">
+                <h3>Configurações</h3>
+                <form action="/admin" method="POST">
+                    <label>Taxa de Serviço (%)</label>
+                    <input type="number" step="0.1" name="taxa_servico" value="{{ config.taxa_servico }}" style="width:100px;">
+                    <button type="submit" class="btn-pequeno btn-receber">Salvar</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="area-impressao" class="area-impressao" style="display: none;"></div>
+
+    <script>
+        let assinaturaAdmin = "";
+
+        function toggleMenu() { var el = document.getElementById("sidebar"); el.style.width = el.style.width === "250px" ? "0" : "250px"; }
+        
+        function abrirAba(nome) {
+            var conteudos = document.getElementsByClassName("conteudo-aba");
+            for(var i=0; i<conteudos.length; i++) conteudos[i].style.display = "none";
+            var botoes = document.getElementsByClassName("aba-btn");
+            for(var i=0; i<botoes.length; i++) botoes[i].classList.remove("ativa");
+            document.getElementById(nome).style.display = "block";
+            document.getElementById("btn-"+nome).classList.add("ativa");
+        }
+        
+        function toggleDetalhes(id) {
+            var row = document.getElementById(id);
+            row.style.display = row.style.display === "table-row" ? "none" : "table-row";
+        }
+
+        function imprimirRecibo(idConteudo) {
+            var conteudo = document.getElementById(idConteudo).innerHTML;
+            var area = document.getElementById("area-impressao");
+            area.innerHTML = conteudo;
+            area.style.display = "block";
+            window.print();
+            area.style.display = "none";
+            area.innerHTML = "";
+        }
+        
+        // Pega estado inicial
+        fetch('/api/admin_stats').then(r=>r.json()).then(data=>{ assinaturaAdmin = data.assinatura; });
+
+        // Auto-Update Inteligente
+        setInterval(function() {
+            // Só atualiza se estiver na aba Caixa (onde os status mudam)
+            if(document.getElementById('comandas').style.display !== 'none'){
+                fetch('/api/admin_stats').then(r=>r.json()).then(data=>{
+                    if (assinaturaAdmin !== "" && data.assinatura !== assinaturaAdmin) {
+                        console.log("Atualizando admin...");
+                        window.location.reload();
+                    }
+                });
+            }
+        }, 3000);
+        
+        const params = new URLSearchParams(window.location.search);
+        abrirAba(params.get('tab') || 'comandas');
+    </script>
+</body>
+</html>
