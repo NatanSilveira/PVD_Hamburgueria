@@ -7,6 +7,34 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <audio id="som_pronto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+    <style>
+        /* CORREÇÃO PARA CELULAR: ESCONDER NOME E AJUSTAR LARGURAS */
+        @media (max-width: 600px) {
+            .logo-mini { 
+                width: auto !important; 
+                flex: 0 0 auto !important;
+            }
+            .texto-logo { display: none !important; } /* Esconde 'DOM BURGUER' no celular */
+            
+            .controles-mini {
+                width: 100% !important;
+                justify-content: space-between !important;
+                padding-left: 10px;
+            }
+            
+            .input-group-mini {
+                max-width: 48% !important; /* Cada campo pega quase metade da tela */
+                flex: 1 !important;
+                min-width: 0 !important; /* Permite encolher se necessário */
+            }
+            
+            /* Ajuste fino para os inputs ficarem alinhados */
+            .input-mini {
+                width: 100% !important;
+                text-overflow: ellipsis;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -21,7 +49,7 @@
     <header class="header-mini">
         <div class="logo-mini">
             <span class="material-icons menu-btn" onclick="toggleMenu()">menu</span>
-            DOM BURGUER
+            <span class="texto-logo">DOM BURGUER</span>
         </div>
         
         <div id="aviso-global" class="aviso-topo" style="display: none;" onclick="irParaMesaPronta()">
@@ -30,21 +58,24 @@
         </div>
 
         <div class="controles-mini">
-            <div class="input-group-mini" style="max-width: 100px;">
+            <div class="input-group-mini">
                 <label>Mesa</label>
-                <input type="text" inputmode="numeric" id="input-mesa" value="{{ mesa }}" list="lista-mesas" 
-                       onchange="mudarMesa()" onclick="this.value=''" placeholder="#"
-                       class="input-mini" style="text-align: center;">
-                
-                <datalist id="lista-mesas">
-                    {% for m_ativa in mesas_ativas %}
-                        <option value="{{ m_ativa }}">Mesa {{ m_ativa }} (Aberta)</option>
+                <select id="select-mesa" onchange="mudarMesa()" class="input-mini" style="background: #333; color: white; border: 1px solid #555;">
+                    <option value="{{ mesa }}" selected>Mesa {{ mesa }}</option>
+                    <option disabled>--- Abertas ---</option>
+                    {% for m in mesas_ativas %}
+                        {% if m.id != mesa %}
+                        <option value="{{ m.id }}">{{ m.id }} - {{ m.cliente }}</option>
+                        {% endif %}
                     {% endfor %}
-                </datalist>
+                    <option disabled>--- Opções ---</option>
+                    <option value="nova">Nova Mesa...</option>
+                </select>
             </div>
-            <div class="input-group-mini" style="flex: 1; max-width: 200px;">
-                <label><span class="material-icons" style="font-size: 14px;">person</span></label>
-                <input type="text" id="input-cliente" value="{{ cliente }}" placeholder="Cliente..." class="input-mini">
+            
+            <div class="input-group-mini">
+                <label><span class="material-icons" style="font-size: 14px; vertical-align: middle;">person</span> Cliente</label>
+                <input type="text" id="input-cliente" value="{{ cliente }}" placeholder="Nome..." class="input-mini">
             </div>
         </div>
     </header>
@@ -89,6 +120,8 @@
                     <input type="hidden" name="cliente_nome" class="hidden-cliente">
                     <input type="hidden" name="nome_produto" value="{{ item.nome }}">
                     <input type="hidden" name="preco" value="{{ item.preco }}">
+                    <input type="hidden" name="categoria_produto" value="{{ item.cat }}">
+                    
                     <div class="info-produto">
                         <strong>{{ item.nome }}</strong>
                         <small>{{ item.desc }}</small>
@@ -148,10 +181,15 @@
         function toggleCarrinho() {
             document.getElementById("lista-carrinho").classList.toggle("aberto");
         }
+        
         function mudarMesa() {
-            var novaMesa = document.getElementById('input-mesa').value;
-            if(novaMesa) {
-                window.location.href = '/?mesa=' + novaMesa;
+            var valor = document.getElementById('select-mesa').value;
+            if (valor === 'nova') {
+                let num = prompt("Digite o número da nova mesa:");
+                if (num) window.location.href = '/?mesa=' + num;
+                else document.getElementById('select-mesa').value = "{{ mesa }}";
+            } else {
+                window.location.href = '/?mesa=' + valor;
             }
         }
         
@@ -172,18 +210,13 @@
             var dados = document.getElementById('dados-sistema').dataset;
             var mesaID = dados.mesa; 
             
-            // FIX: Agora olhamos ATIVOS (Cozinha) E CARRINHO (Novos)
             var qtdTotal = parseInt(dados.qtdAtivos) + parseInt(dados.qtdCarrinho);
-
             var input = document.getElementById('input-cliente');
             
-            // Se a mesa estiver TOTALMENTE vazia (sem pedido na cozinha e sem nada no carrinho)
             if (qtdTotal === 0) {
-                console.log("Mesa 100% livre! Limpando nome...");
                 localStorage.removeItem('cliente_mesa_' + mesaID);
                 input.value = ""; 
             } else {
-                // Se tem alguma coisa (mesmo que seja só no carrinho), recupera o nome
                 if(input.value === "") {
                     var salvo = localStorage.getItem('cliente_mesa_' + mesaID);
                     if(salvo) input.value = salvo;
@@ -227,7 +260,7 @@
                 }
 
                 if (assinaturaAtual !== "" && data.assinatura !== assinaturaAtual) {
-                    if (document.activeElement.tagName !== "INPUT") {
+                    if (document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "SELECT") {
                         window.location.reload();
                     }
                 }

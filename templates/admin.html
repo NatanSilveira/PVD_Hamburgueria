@@ -13,6 +13,26 @@
             .area-impressao { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; color: black; background: white; }
             .no-print { display: none !important; }
         }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-titulo { font-weight: bold; font-size: 1.2rem; }
+        .close-modal { cursor: pointer; font-size: 1.5rem; color: #777; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-full { width: 100%; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-confirmar { background: #4CAF50; color: white; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; vertical-align: middle; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2196F3; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .resumo-pagamento { background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9rem; }
+        .linha-resumo { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .total-destaque { font-size: 1.2rem; font-weight: bold; color: #2e7d32; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -47,16 +67,16 @@
                 <span class="material-icons dash-icon">hourglass_top</span>
                 <div class="dash-info">
                     {% set total_aberto = namespace(value=0) %}
-                    {% for m in mesas.values() %} {% set total_aberto.value = total_aberto.value + m.total_final %} {% endfor %}
+                    {% for m in mesas.values() %} {% set total_aberto.value = total_aberto.value + m.total_estimado %} {% endfor %}
                     <h3>R$ {{ "%.2f"|format(total_aberto.value) }}</h3>
-                    <p>A Receber (Mesas)</p>
+                    <p>A Receber (Estimado)</p>
                 </div>
             </div>
         </div>
         
         <div class="abas-container">
             <button type="button" id="btn-comandas" class="aba-btn ativa" onclick="abrirAba('comandas')">💰 Caixa (Aberto)</button>
-            <button type="button" id="btn-fechamento" class="aba-btn" onclick="abrirAba('fechamento')">📜 Fechamento</button>
+            <button type="button" id="btn-fechamento" class="aba-btn" onclick="abrirAba('fechamento')">📜 Fechamento (Senha)</button>
             <button type="button" id="btn-produtos" class="aba-btn" onclick="abrirAba('produtos')">🍔 Cardápio</button>
             <button type="button" id="btn-ajustes" class="aba-btn" onclick="abrirAba('ajustes')">🔧 Configurações</button>
         </div>
@@ -69,16 +89,19 @@
                 </div>
             {% else %}
             <table class="tabela-admin">
-                <thead><tr><th>Mesa</th><th>Cliente</th><th>Total</th><th>Ações</th></tr></thead>
+                <thead><tr><th>Mesa</th><th>Cliente</th><th>Total Parcial</th><th>Ações</th></tr></thead>
                 <tbody>
                     {% for numero_mesa, dados in mesas.items() %}
                     <tr>
                         <td><span style="background:#222; color:white; padding:5px 10px; border-radius:50px;">{{ numero_mesa }}</span></td>
                         <td><strong>{{ dados.cliente if dados.cliente else '---' }}</strong></td>
-                        <td style="color: green; font-weight: bold;">R$ {{ "%.2f"|format(dados.total_final) }}</td>
+                        <td style="color: green; font-weight: bold;">R$ {{ "%.2f"|format(dados.subtotal) }}</td>
                         <td>
                             <button class="btn-pequeno btn-expandir" onclick="toggleDetalhes('detalhe-{{ numero_mesa }}')">Detalhes</button>
-                            <a href="/admin/fechar_conta/{{ numero_mesa }}" onclick="return confirm('Receber pagamento?')" class="btn-pequeno btn-receber">Receber</a>
+                            <button class="btn-pequeno btn-receber" 
+                                onclick="abrirModalPagamento('{{ numero_mesa }}', '{{ dados.subtotal }}', '{{ config.taxa_servico }}')">
+                                Receber
+                            </button>
                         </td>
                     </tr>
                     <tr id="detalhe-{{ numero_mesa }}" class="detalhe-row">
@@ -91,10 +114,6 @@
                                     </li>
                                     {% endfor %}
                                 </ul>
-                                <div style="text-align:right; margin-top:10px;">
-                                    <small>Taxa ({{ config.taxa_servico }}%): R$ {{ "%.2f"|format(dados.taxa) }}</small><br>
-                                    <strong>Total: R$ {{ "%.2f"|format(dados.total_final) }}</strong>
-                                </div>
                             </div>
                         </td>
                     </tr>
@@ -118,8 +137,8 @@
             <div class="dash-card" style="margin-bottom: 20px; border-left: 5px solid var(--primary); background: #fffbe6;">
                 <div>
                     <h3 style="margin-top:0;">Resumo Financeiro ({{ data_atual.strftime('%d/%m/%Y') }})</h3>
-                    <div>Faturamento Total (Bruto): <strong>R$ {{ "%.2f"|format(total_dia) }}</strong></div>
-                    <div style="color: #d32f2f;">Taxa de Garçom (Repassar): <strong>R$ {{ "%.2f"|format(total_taxa) }}</strong></div>
+                    <div>Faturamento Total: <strong>R$ {{ "%.2f"|format(total_dia) }}</strong></div>
+                    <div style="color: #d32f2f;">Taxas de Serviço: <strong>R$ {{ "%.2f"|format(total_taxa) }}</strong></div>
                     <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
                     <div style="color:green; font-weight:bold; font-size:1.1rem;">Líquido da Casa: R$ {{ "%.2f"|format(total_dia - total_taxa) }}</div>
                 </div>
@@ -131,16 +150,16 @@
                 <p style="color: #777;">Nenhum pagamento registrado nesta data.</p>
             {% else %}
                 <table class="tabela-admin">
-                    <thead><tr><th>Hora</th><th>Mesa/Cliente</th><th>Total Pago</th><th>Detalhes</th></tr></thead>
+                    <thead><tr><th>Hora</th><th>Mesa/Pagto</th><th>Total Final</th><th>Ações</th></tr></thead>
                     <tbody>
                         {% for recibo in historico %}
                         <tr>
                             <td>{{ recibo.hora }}</td>
-                            <td>Mesa {{ recibo.mesa }} <br> <small>{{ recibo.cliente }}</small></td>
+                            <td>Mesa {{ recibo.mesa }} <br> <small>{{ recibo.pagamento }}</small></td>
                             <td style="font-weight:bold;">R$ {{ "%.2f"|format(recibo.total_final) }}</td>
                             <td>
-                                <button class="btn-pequeno btn-expandir" onclick="toggleDetalhes('recibo-{{ loop.index }}')">Ver Recibo</button>
-                                <button class="btn-pequeno btn-expandir" onclick="imprimirRecibo('recibo-print-{{ loop.index }}')">🖨️ Imprimir</button>
+                                <button class="btn-pequeno btn-expandir" onclick="toggleDetalhes('recibo-{{ loop.index }}')">Recibo</button>
+                                <button class="btn-pequeno btn-expandir" onclick="imprimirRecibo('recibo-print-{{ loop.index }}')">🖨️</button>
                             </td>
                         </tr>
                         <tr id="recibo-{{ loop.index }}" class="detalhe-row">
@@ -163,7 +182,6 @@
                                     </ul>
                                     <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
                                     <div style="text-align: right;">Subtotal: R$ {{ "%.2f"|format(recibo.subtotal) }}</div>
-                                    <div style="text-align: right;">Serviço ({{ config.taxa_servico }}%): R$ {{ "%.2f"|format(recibo.taxa) }}</div>
                                     <h3 style="text-align: right; margin-top: 5px;">TOTAL: R$ {{ "%.2f"|format(recibo.total_final) }}</h3>
                                     <div style="text-align: center; margin-top: 20px; font-size: 0.8rem;">Obrigado pela preferência!</div>
                                 </div>
@@ -177,16 +195,28 @@
 
         <div id="produtos" class="conteudo-aba">
             <div class="form-admin">
-                <form action="/admin" method="POST">
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" name="nome" placeholder="Produto" required style="flex:2;">
-                        <input type="number" step="0.01" name="preco" placeholder="R$" required style="flex:1;">
-                        <input type="text" name="categoria" list="cats" placeholder="Categoria" required style="flex:1;">
-                        <datalist id="cats"><option value="🍔 Hambúrgueres"><option value="🥤 Bebidas"></datalist>
-                    </div>
-                    <textarea name="descricao" placeholder="Descrição (Ex: Pão brioche, 160g carne, queijo...)" rows="2" style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"></textarea>
+                <form action="/admin" method="POST" id="formProduto">
+                    <input type="hidden" name="acao" id="acaoProduto" value="adicionar">
+                    <input type="hidden" name="produto_id" id="produtoId">
                     
-                    <button type="submit" class="btn-padrao" style="margin-top: 10px;">Salvar</button>
+                    <h3 id="tituloFormProduto">Novo Produto</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" name="nome" id="prodNome" placeholder="Produto" required style="flex:2;">
+                        <input type="number" step="0.01" name="preco" id="prodPreco" placeholder="R$" required style="flex:1;">
+                        <input type="text" name="categoria" id="prodCategoria" list="cats" placeholder="Categoria" required style="flex:1;">
+                        <datalist id="cats">
+                            <option value="🍔 Hambúrgueres">
+                            <option value="🍟 Acompanhamentos">
+                            <option value="🥤 Bebidas">
+                            <option value="🍰 Sobremesas">
+                        </datalist>
+                    </div>
+                    <textarea name="descricao" id="prodDesc" placeholder="Descrição (Ex: Pão brioche, 160g carne, queijo...)" rows="2" style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"></textarea>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="submit" class="btn-padrao" id="btnSalvarProd">Salvar</button>
+                        <button type="button" class="btn-padrao" style="background: #999; display: none;" id="btnCancelarEdicao" onclick="cancelarEdicao()">Cancelar</button>
+                    </div>
                 </form>
             </div>
             <table class="tabela-admin">
@@ -196,7 +226,10 @@
                         <td><strong>{{ p.nome }}</strong><br><small style="color: #777;">{{ p.descricao }}</small></td>
                         <td>{{ p.categoria }}</td>
                         <td>R$ {{ p.preco }}</td>
-                        <td><a href="/admin/deletar/{{ p.id }}" class="btn-excluir"><span class="material-icons" style="font-size:16px;">delete</span></a></td>
+                        <td>
+                            <button onclick="editarProduto('{{ p.id }}', '{{ p.nome }}', '{{ p.preco }}', '{{ p.categoria }}', '{{ p.descricao }}')" class="btn-excluir" style="background: #FF9800; margin-right: 5px;"><span class="material-icons" style="font-size:16px;">edit</span></button>
+                            <a href="/admin/deletar/{{ p.id }}" class="btn-excluir"><span class="material-icons" style="font-size:16px;">delete</span></a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -207,7 +240,7 @@
             <div class="form-admin">
                 <h3>Configurações</h3>
                 <form action="/admin" method="POST">
-                    <label>Taxa de Serviço (%)</label>
+                    <label>Taxa de Serviço Padrão (%)</label>
                     <input type="number" step="0.1" name="taxa_servico" value="{{ config.taxa_servico }}" style="width:100px;">
                     <button type="submit" class="btn-pequeno btn-receber">Salvar</button>
                 </form>
@@ -216,14 +249,73 @@
 
     </div>
 
+    <div id="modalPagamento" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-titulo">Fechar Mesa <span id="lblMesa"></span></div>
+                <div class="close-modal" onclick="fecharModal('modalPagamento')">&times;</div>
+            </div>
+            <form action="/admin/fechar_conta_post" method="POST">
+                <input type="hidden" name="mesa" id="inputMesaPagamento">
+                
+                <div class="resumo-pagamento">
+                    <div class="linha-resumo"><span>Subtotal:</span> <span id="lblSubtotal">R$ 0.00</span></div>
+                    <div class="linha-resumo">
+                        <span>Serviço (10%):</span>
+                        <label class="switch">
+                            <input type="checkbox" name="taxa_servico" id="checkTaxa" onchange="calcularTotalModal()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="linha-resumo">
+                        <span>Desconto (R$):</span>
+                        <input type="number" name="desconto" id="inputDesconto" value="0" step="0.50" style="width: 80px; padding: 2px;" oninput="calcularTotalModal()">
+                    </div>
+                    <div class="linha-resumo total-destaque">
+                        <span>Total Final:</span>
+                        <span id="lblTotalFinal">R$ 0.00</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Forma de Pagamento</label>
+                    <select name="pagamento" class="form-control" required>
+                        <option value="Pix">Pix</option>
+                        <option value="Cartão Crédito">Cartão Crédito</option>
+                        <option value="Cartão Débito">Cartão Débito</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-full btn-confirmar">CONFIRMAR PAGAMENTO</button>
+            </form>
+        </div>
+    </div>
+
     <div id="area-impressao" class="area-impressao" style="display: none;"></div>
 
     <script>
         let assinaturaAdmin = "";
+        let subtotalAtual = 0;
+        let taxaPercentual = 0;
 
         function toggleMenu() { var el = document.getElementById("sidebar"); el.style.width = el.style.width === "250px" ? "0" : "250px"; }
         
         function abrirAba(nome) {
+            // --- TRAVA DE SEGURANÇA PARA A ABA FECHAMENTO ---
+            if (nome === 'fechamento') {
+                // Pergunta a senha usando o prompt padrão do navegador (Simples e Seguro contra bugs visuais)
+                let senhaDigitada = prompt("🔒 Área Restrita: Gestão Financeira\n\nPor favor, digite a senha de Gerente:");
+                
+                // Se cancelar ou digitar errado
+                if (senhaDigitada === null) return; // Cancelou
+                if (senhaDigitada !== "{{ senha_admin }}") {
+                    alert("🚫 Acesso Negado! Senha incorreta.");
+                    return; // Não troca a aba
+                }
+            }
+            // ------------------------------------------------
+
             var conteudos = document.getElementsByClassName("conteudo-aba");
             for(var i=0; i<conteudos.length; i++) conteudos[i].style.display = "none";
             var botoes = document.getElementsByClassName("aba-btn");
@@ -247,21 +339,75 @@
             area.innerHTML = "";
         }
         
-        // Pega estado inicial
-        fetch('/api/admin_stats').then(r=>r.json()).then(data=>{ assinaturaAdmin = data.assinatura; });
+        function abrirModalPagamento(mesa, subtotal, taxa) {
+            subtotalAtual = parseFloat(subtotal);
+            taxaPercentual = parseFloat(taxa);
+            document.getElementById('lblMesa').innerText = mesa;
+            document.getElementById('inputMesaPagamento').value = mesa;
+            document.getElementById('lblSubtotal').innerText = 'R$ ' + subtotalAtual.toFixed(2);
+            document.getElementById('checkTaxa').checked = true;
+            document.getElementById('inputDesconto').value = 0;
+            calcularTotalModal();
+            document.getElementById('modalPagamento').style.display = 'flex';
+        }
 
-        // Auto-Update Inteligente
+        function calcularTotalModal() {
+            let desconto = parseFloat(document.getElementById('inputDesconto').value) || 0;
+            let cobraTaxa = document.getElementById('checkTaxa').checked;
+            let valorTaxa = cobraTaxa ? (subtotalAtual * (taxaPercentual / 100)) : 0;
+            let total = subtotalAtual + valorTaxa - desconto;
+            if (total < 0) total = 0;
+            document.getElementById('lblTotalFinal').innerText = 'R$ ' + total.toFixed(2);
+        }
+
+        function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function editarProduto(id, nome, preco, cat, desc) {
+            window.scrollTo(0,0);
+            abrirAba('produtos');
+            document.getElementById('tituloFormProduto').innerText = "Editar Produto: " + nome;
+            document.getElementById('acaoProduto').value = "editar";
+            document.getElementById('produtoId').value = id;
+            document.getElementById('prodNome').value = nome;
+            document.getElementById('prodPreco').value = preco;
+            document.getElementById('prodCategoria').value = cat;
+            document.getElementById('prodDesc').value = desc;
+            document.getElementById('btnSalvarProd').innerText = "Atualizar";
+            document.getElementById('btnSalvarProd').style.background = "#FF9800";
+            document.getElementById('btnCancelarEdicao').style.display = "block";
+        }
+
+        function cancelarEdicao() {
+            document.getElementById('formProduto').reset();
+            document.getElementById('tituloFormProduto').innerText = "Novo Produto";
+            document.getElementById('acaoProduto').value = "adicionar";
+            document.getElementById('produtoId').value = "";
+            document.getElementById('btnSalvarProd').innerText = "Salvar";
+            document.getElementById('btnSalvarProd').style.background = "";
+            document.getElementById('btnCancelarEdicao').style.display = "none";
+        }
+        
+        // Pega assinatura inicial
+        fetch('/api/admin_stats?t=' + Date.now()).then(r=>r.json()).then(data=>{ assinaturaAdmin = data.assinatura; });
+
         setInterval(function() {
-            // Só atualiza se estiver na aba Caixa (onde os status mudam)
+            // Só verifica se a aba de Comandas (Caixa) estiver visível
             if(document.getElementById('comandas').style.display !== 'none'){
-                fetch('/api/admin_stats').then(r=>r.json()).then(data=>{
+                
+                // O '?t=' + Date.now() obriga o navegador a buscar dados frescos
+                fetch('/api/admin_stats?t=' + Date.now()).then(r=>r.json()).then(data=>{
+                    
                     if (assinaturaAdmin !== "" && data.assinatura !== assinaturaAdmin) {
-                        console.log("Atualizando admin...");
-                        window.location.reload();
+                        console.log("Mudança detectada! Atualizando...");
+                        
+                        // Só recarrega se NÃO estiver com a janelinha de pagamento aberta
+                        if(document.getElementById('modalPagamento').style.display === 'none') {
+                            window.location.reload();
+                        }
                     }
                 });
             }
-        }, 3000);
+        }, 2000); // Mudei para 2 segundos para ficar mais rápido
         
         const params = new URLSearchParams(window.location.search);
         abrirAba(params.get('tab') || 'comandas');
