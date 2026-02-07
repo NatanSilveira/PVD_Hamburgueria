@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from datetime import datetime, date
 import time
 
@@ -29,7 +30,6 @@ class Pedido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     comanda_id = db.Column(db.Integer, nullable=True)
     produto_nome = db.Column(db.String(100), nullable=False)
-    # NOVO: Salvar categoria aqui para filtrar a cozinha
     categoria_item = db.Column(db.String(50), default='Geral') 
     preco = db.Column(db.Float, nullable=False)
     mesa = db.Column(db.Integer, nullable=False)
@@ -66,34 +66,26 @@ def index():
     mesa_atual = request.args.get('mesa', 1, type=int)
     manter_carrinho = request.args.get('carrinho_aberto', 0, type=int)
     
-    # LÓGICA DO DROPDOWN (Buscar mesas ativas com nomes)
-    # Busca IDs de mesas com conta aberta
     mesas_query = db.session.query(Pedido.mesa, Pedido.cliente_nome).filter(Pedido.status != 'Pago').distinct().all()
     
-    # Cria um dicionário para evitar duplicatas e pegar o nome mais recente
     dict_mesas = {}
     for m_id, m_nome in mesas_query:
         if m_id not in dict_mesas:
             dict_mesas[m_id] = m_nome
-        # Atualiza se tiver nome (caso tenha pego um vazio antes)
         if m_nome: 
             dict_mesas[m_id] = m_nome
             
-    # Transforma em lista ordenada para o HTML
     lista_mesas_ativas = []
     for m_id in sorted(dict_mesas.keys()):
         lista_mesas_ativas.append({'id': m_id, 'cliente': dict_mesas[m_id]})
 
-    # Busca pedido atual para preencher nome se existir
     ultimo_pedido = Pedido.query.filter_by(mesa=mesa_atual).filter(Pedido.status != 'Pago').order_by(Pedido.id.desc()).first()
     cliente_atual = ultimo_pedido.cliente_nome if ultimo_pedido else ""
     
-    # Cardápio
     produtos_db = Produto.query.all()
     itens_por_categoria = {}
     for p in produtos_db:
         if p.categoria not in itens_por_categoria: itens_por_categoria[p.categoria] = []
-        # Passa a categoria junto para o HTML usar no form
         itens_por_categoria[p.categoria].append({'nome': p.nome, 'preco': p.preco, 'desc': p.descricao, 'cat': p.categoria})
     
     categorias_ordenadas = {}
@@ -111,15 +103,13 @@ def index():
 def adicionar_item():
     mesa = request.form['mesa']
     cliente = request.form['cliente_nome']
-    
-    # NOVO: Recebe a categoria do HTML
     cat = request.form.get('categoria_produto', 'Geral')
     
     db.session.add(Pedido(
         mesa=mesa, 
         cliente_nome=cliente, 
         produto_nome=request.form['nome_produto'], 
-        categoria_item=cat, # Salva a categoria
+        categoria_item=cat,
         preco=float(request.form['preco']), 
         observacao=request.form['observacao'], 
         status='Carrinho'
@@ -136,12 +126,10 @@ def enviar_cozinha(mesa):
             item.comanda_id = id_comanda
             item.data_hora = datetime.now()
             
-            # --- FILTRO INTELIGENTE DA COZINHA ---
-            # Se for Bebida ou Sobremesa, NÃO vai pra cozinha (status já vira Entregue)
             if 'Bebidas' in item.categoria_item or 'Sobremesas' in item.categoria_item:
                 item.status = 'Entregue' 
             else:
-                item.status = 'Pendente' # Vai pra cozinha (Hambúrgueres, Acompanhamentos)
+                item.status = 'Pendente'
                 
         db.session.commit()
     return redirect(f'/?mesa={mesa}')
@@ -163,11 +151,9 @@ def garcom_confirma(mesa):
     db.session.commit()
     return redirect(f'/?mesa={mesa}')
 
-# --- ROTAS COZINHA (Igual) ---
+# --- ROTAS COZINHA ---
 @app.route('/cozinha')
 def cozinha():
-    # Cozinha só vê o que é Pendente/Preparando/Pronto. 
-    # Como as bebidas já viraram "Entregue" no envio, elas nem aparecem aqui!
     itens = Pedido.query.filter(Pedido.status.in_(['Pendente', 'Preparando', 'Pronto'])).order_by(Pedido.data_hora).all()
     comandas = {}
     for item in itens:
@@ -223,55 +209,55 @@ def api_checar():
 
 @app.route('/api/admin_stats')
 def api_admin_stats():
-    from sqlalchemy import func
-    
-    # Conta quantos itens existem em cada status
+    # Admin Stats com valor total para forçar update ao vender itens
     pend = Pedido.query.filter_by(status='Pendente').count()
     prep = Pedido.query.filter_by(status='Preparando').count()
     pronto = Pedido.query.filter_by(status='Pronto').count()
     entregue = Pedido.query.filter_by(status='Entregue').count()
-    
-    # NOVO: Soma o valor total de todos os pedidos ativos.
-    # Assim, se entrar uma Coca (que já nasce 'Entregue'), o valor total muda e o admin atualiza.
     total_valor = db.session.query(func.sum(Pedido.preco)).filter(
         Pedido.status.in_(['Pendente', 'Preparando', 'Pronto', 'Entregue'])
     ).scalar() or 0.0
     
-    # A assinatura agora inclui o dinheiro. Mudou o dinheiro? Atualiza a tela.
     assinatura = f"{pend}-{prep}-{pronto}-{entregue}-{total_valor}"
-    
     return jsonify({'assinatura': assinatura})
 
 # --- ADMIN E FECHAMENTO ---
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'POST':
+        # 1. Ajuste de Taxa
         if 'taxa_servico' in request.form:
             conf = Configuracao.query.first()
             conf.taxa_servico = float(request.form['taxa_servico'])
             db.session.commit()
             return redirect('/admin?tab=ajustes')
         
-        elif 'nome' in request.form and 'acao' not in request.form:
-            db.session.add(Produto(
-                nome=request.form['nome'], 
-                preco=float(request.form['preco']), 
-                categoria=request.form['categoria'], 
-                descricao=request.form['descricao']
-            ))
-            db.session.commit()
-            return redirect('/admin?tab=produtos')
-
-        elif 'acao' in request.form and request.form['acao'] == 'editar':
-            prod_id = request.form['produto_id']
-            prod = Produto.query.get(prod_id)
-            if prod:
-                prod.nome = request.form['nome']
-                prod.preco = float(request.form['preco'])
-                prod.categoria = request.form['categoria']
-                prod.descricao = request.form['descricao']
+        # 2. Gestão de Produtos (Adicionar ou Editar)
+        elif 'nome' in request.form:
+            acao = request.form.get('acao') # Pega o campo hidden 'acao'
+            
+            # --- CASO ADICIONAR ---
+            if acao == 'adicionar':
+                db.session.add(Produto(
+                    nome=request.form['nome'], 
+                    preco=float(request.form['preco']), 
+                    categoria=request.form['categoria'], 
+                    descricao=request.form['descricao']
+                ))
                 db.session.commit()
-            return redirect('/admin?tab=produtos')
+                return redirect('/admin?tab=produtos')
+
+            # --- CASO EDITAR ---
+            elif acao == 'editar':
+                prod_id = request.form.get('produto_id')
+                prod = Produto.query.get(prod_id)
+                if prod:
+                    prod.nome = request.form['nome']
+                    prod.preco = float(request.form['preco'])
+                    prod.categoria = request.form['categoria']
+                    prod.descricao = request.form['descricao']
+                    db.session.commit()
+                return redirect('/admin?tab=produtos')
     
     produtos = Produto.query.all()
     config = Configuracao.query.first()
