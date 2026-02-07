@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,41 +9,187 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         @media print {
-            body * { visibility: hidden; }
-            .area-impressao, .area-impressao * { visibility: visible; }
-            .area-impressao { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; color: black; background: white; }
-            .no-print { display: none !important; }
+            body * {
+                visibility: hidden;
+            }
+
+            .area-impressao,
+            .area-impressao * {
+                visibility: visible;
+            }
+
+            .area-impressao {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+                color: black;
+                background: white;
+            }
+
+            .no-print {
+                display: none !important;
+            }
         }
-        
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-        .modal-titulo { font-weight: bold; font-size: 1.2rem; }
-        .close-modal { cursor: pointer; font-size: 1.5rem; color: #777; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-full { width: 100%; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-confirmar { background: #4CAF50; color: white; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; vertical-align: middle; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #2196F3; }
-        input:checked + .slider:before { transform: translateX(20px); }
-        .resumo-pagamento { background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9rem; }
-        .linha-resumo { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .total-destaque { font-size: 1.2rem; font-weight: bold; color: #2e7d32; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-titulo {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #777;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-confirmar {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            vertical-align: middle;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #2196F3;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        .resumo-pagamento {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .linha-resumo {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .total-destaque {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2e7d32;
+            border-top: 1px solid #ddd;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="sidebar" class="sidebar no-print">
         <a href="javascript:void(0)" class="closebtn" onclick="toggleMenu()">&times;</a>
         <h2>Dom Burguer</h2>
-        <a href="/"><span class="material-icons" style="vertical-align: middle; margin-right: 10px;">restaurant_menu</span> Cardápio</a>
-        <a href="/cozinha"><span class="material-icons" style="vertical-align: middle; margin-right: 10px;">soup_kitchen</span> Cozinha</a>
-        <a href="/admin" style="color: white; border-left: 3px solid #FF9800; background: #222;"><span class="material-icons" style="vertical-align: middle; margin-right: 10px;">settings</span> Admin</a>
+        <a href="/"><span class="material-icons"
+                style="vertical-align: middle; margin-right: 10px;">restaurant_menu</span> Cardápio</a>
+        <a href="/cozinha"><span class="material-icons"
+                style="vertical-align: middle; margin-right: 10px;">soup_kitchen</span> Cozinha</a>
+        <a href="/admin" style="color: white; border-left: 3px solid #FF9800; background: #222;"><span
+                class="material-icons" style="vertical-align: middle; margin-right: 10px;">settings</span> Admin</a>
     </div>
 
     <header class="top-bar no-print">
@@ -67,38 +214,52 @@
                 <span class="material-icons dash-icon">hourglass_top</span>
                 <div class="dash-info">
                     {% set total_aberto = namespace(value=0) %}
-                    {% for m in mesas.values() %} {% set total_aberto.value = total_aberto.value + m.total_estimado %} {% endfor %}
+                    {% for m in mesas.values() %} {% set total_aberto.value = total_aberto.value + m.total_estimado %}
+                    {% endfor %}
                     <h3>R$ {{ "%.2f"|format(total_aberto.value) }}</h3>
                     <p>A Receber (Estimado)</p>
                 </div>
             </div>
         </div>
-        
+
         <div class="abas-container">
-            <button type="button" id="btn-comandas" class="aba-btn ativa" onclick="abrirAba('comandas')">💰 Caixa (Aberto)</button>
-            <button type="button" id="btn-fechamento" class="aba-btn" onclick="abrirAba('fechamento')">📜 Fechamento (Senha)</button>
+            <button type="button" id="btn-comandas" class="aba-btn ativa" onclick="abrirAba('comandas')">💰 Caixa
+                (Aberto)</button>
+            <button type="button" id="btn-fechamento" class="aba-btn" onclick="abrirAba('fechamento')">📜 Fechamento
+                (Senha)</button>
             <button type="button" id="btn-produtos" class="aba-btn" onclick="abrirAba('produtos')">🍔 Cardápio</button>
-            <button type="button" id="btn-ajustes" class="aba-btn" onclick="abrirAba('ajustes')">🔧 Configurações</button>
+            <button type="button" id="btn-ajustes" class="aba-btn" onclick="abrirAba('ajustes')">🔧
+                Configurações</button>
         </div>
 
         <div id="comandas" class="conteudo-aba ativa">
             {% if mesas|length == 0 %}
-                <div style="text-align: center; padding: 40px; color: #999; background: white; border-radius: 8px;">
-                    <span class="material-icons" style="font-size: 48px; display: block; margin-bottom: 10px;">check_circle_outline</span>
-                    Nenhuma conta aberta.
-                </div>
+            <div style="text-align: center; padding: 40px; color: #999; background: white; border-radius: 8px;">
+                <span class="material-icons"
+                    style="font-size: 48px; display: block; margin-bottom: 10px;">check_circle_outline</span>
+                Nenhuma conta aberta.
+            </div>
             {% else %}
             <table class="tabela-admin">
-                <thead><tr><th>Mesa</th><th>Cliente</th><th>Total Parcial</th><th>Ações</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Mesa</th>
+                        <th>Cliente</th>
+                        <th>Total Parcial</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% for numero_mesa, dados in mesas.items() %}
                     <tr>
-                        <td><span style="background:#222; color:white; padding:5px 10px; border-radius:50px;">{{ numero_mesa }}</span></td>
+                        <td><span style="background:#222; color:white; padding:5px 10px; border-radius:50px;">{{
+                                numero_mesa }}</span></td>
                         <td><strong>{{ dados.cliente if dados.cliente else '---' }}</strong></td>
                         <td style="color: green; font-weight: bold;">R$ {{ "%.2f"|format(dados.subtotal) }}</td>
                         <td>
-                            <button class="btn-pequeno btn-expandir" onclick="toggleDetalhes('detalhe-{{ numero_mesa }}')">Detalhes</button>
-                            <button class="btn-pequeno btn-receber" 
+                            <button class="btn-pequeno btn-expandir"
+                                onclick="toggleDetalhes('detalhe-{{ numero_mesa }}')">Detalhes</button>
+                            <button class="btn-pequeno btn-receber"
                                 onclick="abrirModalPagamento('{{ numero_mesa }}', '{{ dados.subtotal }}', '{{ config.taxa_servico }}')">
                                 Receber
                             </button>
@@ -109,8 +270,10 @@
                             <div class="detalhe-content">
                                 <ul style="list-style:none; padding:0;">
                                     {% for item in dados.itens %}
-                                    <li style="display:flex; justify-content:space-between; border-bottom:1px dashed #ddd; padding:5px 0;">
-                                        <span>{{ item.produto_nome }} <small>({{ item.status }})</small></span><span>R$ {{ item.preco }}</span>
+                                    <li
+                                        style="display:flex; justify-content:space-between; border-bottom:1px dashed #ddd; padding:5px 0;">
+                                        <span>{{ item.produto_nome }} <small>({{ item.status }})</small></span><span>R$
+                                            {{ item.preco }}</span>
                                     </li>
                                     {% endfor %}
                                 </ul>
@@ -124,72 +287,91 @@
         </div>
 
         <div id="fechamento" class="conteudo-aba">
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between;">
+            <div
+                style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between;">
                 <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
                     <span class="material-icons">calendar_today</span> Filtro
                 </h3>
                 <form action="/admin" method="GET" style="margin: 0;">
                     <input type="hidden" name="tab" value="fechamento">
-                    <input type="date" name="data" value="{{ data_atual }}" onchange="this.form.submit()" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="date" name="data" value="{{ data_atual }}" onchange="this.form.submit()"
+                        style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
                 </form>
             </div>
 
-            <div class="dash-card" style="margin-bottom: 20px; border-left: 5px solid var(--primary); background: #fffbe6;">
+            <div class="dash-card"
+                style="margin-bottom: 20px; border-left: 5px solid var(--primary); background: #fffbe6;">
                 <div>
                     <h3 style="margin-top:0;">Resumo Financeiro ({{ data_atual.strftime('%d/%m/%Y') }})</h3>
                     <div>Faturamento Total: <strong>R$ {{ "%.2f"|format(total_dia) }}</strong></div>
-                    <div style="color: #d32f2f;">Taxas de Serviço: <strong>R$ {{ "%.2f"|format(total_taxa) }}</strong></div>
+                    <div style="color: #d32f2f;">Taxas de Serviço: <strong>R$ {{ "%.2f"|format(total_taxa) }}</strong>
+                    </div>
                     <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
-                    <div style="color:green; font-weight:bold; font-size:1.1rem;">Líquido da Casa: R$ {{ "%.2f"|format(total_dia - total_taxa) }}</div>
+                    <div style="color:green; font-weight:bold; font-size:1.1rem;">Líquido da Casa: R$ {{
+                        "%.2f"|format(total_dia - total_taxa) }}</div>
                 </div>
             </div>
 
             <h3 style="margin-bottom:10px;">Comprovantes Emitidos</h3>
-            
+
             {% if historico|length == 0 %}
-                <p style="color: #777;">Nenhum pagamento registrado nesta data.</p>
+            <p style="color: #777;">Nenhum pagamento registrado nesta data.</p>
             {% else %}
-                <table class="tabela-admin">
-                    <thead><tr><th>Hora</th><th>Mesa/Pagto</th><th>Total Final</th><th>Ações</th></tr></thead>
-                    <tbody>
-                        {% for recibo in historico %}
-                        <tr>
-                            <td>{{ recibo.hora }}</td>
-                            <td>Mesa {{ recibo.mesa }} <br> <small>{{ recibo.pagamento }}</small></td>
-                            <td style="font-weight:bold;">R$ {{ "%.2f"|format(recibo.total_final) }}</td>
-                            <td>
-                                <button class="btn-pequeno btn-expandir" onclick="toggleDetalhes('recibo-{{ loop.index }}')">Recibo</button>
-                                <button class="btn-pequeno btn-expandir" onclick="imprimirRecibo('recibo-print-{{ loop.index }}')">🖨️</button>
-                            </td>
-                        </tr>
-                        <tr id="recibo-{{ loop.index }}" class="detalhe-row">
-                            <td colspan="4" style="padding:0;">
-                                <div id="recibo-print-{{ loop.index }}" class="area-impressao-conteudo" style="padding: 20px; border: 1px solid #ccc; background: white; max-width: 300px; margin: 10px auto;">
-                                    <h3 style="text-align: center; margin: 0 0 10px;">DOM BURGUER</h3>
-                                    <p style="text-align: center; font-size: 0.9rem; margin-bottom: 15px;">Comprovante de Venda</p>
-                                    <div style="border-bottom: 1px dashed #000; margin-bottom: 10px;"></div>
-                                    <div><strong>Data:</strong> {{ data_atual.strftime('%d/%m/%Y') }} - {{ recibo.hora }}</div>
-                                    <div><strong>Mesa:</strong> {{ recibo.mesa }}</div>
-                                    <div><strong>Cliente:</strong> {{ recibo.cliente }}</div>
-                                    <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
-                                    <ul style="list-style: none; padding: 0; margin: 0;">
-                                        {% for item in recibo.itens %}
-                                        <li style="display: flex; justify-content: space-between;">
-                                            <span>{{ item.produto_nome }}</span>
-                                            <span>{{ "%.2f"|format(item.preco) }}</span>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                    <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
-                                    <div style="text-align: right;">Subtotal: R$ {{ "%.2f"|format(recibo.subtotal) }}</div>
-                                    <h3 style="text-align: right; margin-top: 5px;">TOTAL: R$ {{ "%.2f"|format(recibo.total_final) }}</h3>
-                                    <div style="text-align: center; margin-top: 20px; font-size: 0.8rem;">Obrigado pela preferência!</div>
+            <table class="tabela-admin">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Mesa/Pagto</th>
+                        <th>Total Final</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recibo in historico %}
+                    <tr>
+                        <td>{{ recibo.hora }}</td>
+                        <td>Mesa {{ recibo.mesa }} <br> <small>{{ recibo.pagamento }}</small></td>
+                        <td style="font-weight:bold;">R$ {{ "%.2f"|format(recibo.total_final) }}</td>
+                        <td>
+                            <button class="btn-pequeno btn-expandir"
+                                onclick="toggleDetalhes('recibo-{{ loop.index }}')">Recibo</button>
+                            <button class="btn-pequeno btn-expandir"
+                                onclick="imprimirRecibo('recibo-print-{{ loop.index }}')">🖨️</button>
+                        </td>
+                    </tr>
+                    <tr id="recibo-{{ loop.index }}" class="detalhe-row">
+                        <td colspan="4" style="padding:0;">
+                            <div id="recibo-print-{{ loop.index }}" class="area-impressao-conteudo"
+                                style="padding: 20px; border: 1px solid #ccc; background: white; max-width: 300px; margin: 10px auto;">
+                                <h3 style="text-align: center; margin: 0 0 10px;">DOM BURGUER</h3>
+                                <p style="text-align: center; font-size: 0.9rem; margin-bottom: 15px;">Comprovante de
+                                    Venda</p>
+                                <div style="border-bottom: 1px dashed #000; margin-bottom: 10px;"></div>
+                                <div><strong>Data:</strong> {{ data_atual.strftime('%d/%m/%Y') }} - {{ recibo.hora }}
                                 </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                <div><strong>Mesa:</strong> {{ recibo.mesa }}</div>
+                                <div><strong>Cliente:</strong> {{ recibo.cliente }}</div>
+                                <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
+                                <ul style="list-style: none; padding: 0; margin: 0;">
+                                    {% for item in recibo.itens %}
+                                    <li style="display: flex; justify-content: space-between;">
+                                        <span>{{ item.produto_nome }}</span>
+                                        <span>{{ "%.2f"|format(item.preco) }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
+                                <div style="text-align: right;">Subtotal: R$ {{ "%.2f"|format(recibo.subtotal) }}</div>
+                                <h3 style="text-align: right; margin-top: 5px;">TOTAL: R$ {{
+                                    "%.2f"|format(recibo.total_final) }}</h3>
+                                <div style="text-align: center; margin-top: 20px; font-size: 0.8rem;">Obrigado pela
+                                    preferência!</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% endif %}
         </div>
 
@@ -198,12 +380,14 @@
                 <form action="/admin" method="POST" id="formProduto">
                     <input type="hidden" name="acao" id="acaoProduto" value="adicionar">
                     <input type="hidden" name="produto_id" id="produtoId">
-                    
+
                     <h3 id="tituloFormProduto">Novo Produto</h3>
                     <div style="display:flex; gap:10px;">
                         <input type="text" name="nome" id="prodNome" placeholder="Produto" required style="flex:2;">
-                        <input type="number" step="0.01" name="preco" id="prodPreco" placeholder="R$" required style="flex:1;">
-                        <input type="text" name="categoria" id="prodCategoria" list="cats" placeholder="Categoria" required style="flex:1;">
+                        <input type="number" step="0.01" name="preco" id="prodPreco" placeholder="R$" required
+                            style="flex:1;">
+                        <input type="text" name="categoria" id="prodCategoria" list="cats" placeholder="Categoria"
+                            required style="flex:1;">
                         <datalist id="cats">
                             <option value="🍔 Hambúrgueres">
                             <option value="🍟 Acompanhamentos">
@@ -211,11 +395,14 @@
                             <option value="🍰 Sobremesas">
                         </datalist>
                     </div>
-                    <textarea name="descricao" id="prodDesc" placeholder="Descrição (Ex: Pão brioche, 160g carne, queijo...)" rows="2" style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"></textarea>
-                    
+                    <textarea name="descricao" id="prodDesc"
+                        placeholder="Descrição (Ex: Pão brioche, 160g carne, queijo...)" rows="2"
+                        style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"></textarea>
+
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <button type="submit" class="btn-padrao" id="btnSalvarProd">Salvar</button>
-                        <button type="button" class="btn-padrao" style="background: #999; display: none;" id="btnCancelarEdicao" onclick="cancelarEdicao()">Cancelar</button>
+                        <button type="button" class="btn-padrao" style="background: #999; display: none;"
+                            id="btnCancelarEdicao" onclick="cancelarEdicao()">Cancelar</button>
                     </div>
                 </form>
             </div>
@@ -227,8 +414,12 @@
                         <td>{{ p.categoria }}</td>
                         <td>R$ {{ p.preco }}</td>
                         <td>
-                            <button onclick="editarProduto('{{ p.id }}', '{{ p.nome }}', '{{ p.preco }}', '{{ p.categoria }}', '{{ p.descricao }}')" class="btn-excluir" style="background: #FF9800; margin-right: 5px;"><span class="material-icons" style="font-size:16px;">edit</span></button>
-                            <a href="/admin/deletar/{{ p.id }}" class="btn-excluir"><span class="material-icons" style="font-size:16px;">delete</span></a>
+                            <button
+                                onclick="editarProduto('{{ p.id }}', '{{ p.nome }}', '{{ p.preco }}', '{{ p.categoria }}', '{{ p.descricao }}')"
+                                class="btn-excluir" style="background: #FF9800; margin-right: 5px;"><span
+                                    class="material-icons" style="font-size:16px;">edit</span></button>
+                            <a href="/admin/deletar/{{ p.id }}" class="btn-excluir"><span class="material-icons"
+                                    style="font-size:16px;">delete</span></a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -241,7 +432,8 @@
                 <h3>Configurações</h3>
                 <form action="/admin" method="POST">
                     <label>Taxa de Serviço Padrão (%)</label>
-                    <input type="number" step="0.1" name="taxa_servico" value="{{ config.taxa_servico }}" style="width:100px;">
+                    <input type="number" step="0.1" name="taxa_servico" value="{{ config.taxa_servico }}"
+                        style="width:100px;">
                     <button type="submit" class="btn-pequeno btn-receber">Salvar</button>
                 </form>
             </div>
@@ -257,19 +449,21 @@
             </div>
             <form action="/admin/fechar_conta_post" method="POST">
                 <input type="hidden" name="mesa" id="inputMesaPagamento">
-                
+
                 <div class="resumo-pagamento">
                     <div class="linha-resumo"><span>Subtotal:</span> <span id="lblSubtotal">R$ 0.00</span></div>
                     <div class="linha-resumo">
                         <span>Serviço (10%):</span>
                         <label class="switch">
-                            <input type="checkbox" name="taxa_servico" id="checkTaxa" onchange="calcularTotalModal()" checked>
+                            <input type="checkbox" name="taxa_servico" id="checkTaxa" onchange="calcularTotalModal()"
+                                checked>
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div class="linha-resumo">
                         <span>Desconto (R$):</span>
-                        <input type="number" name="desconto" id="inputDesconto" value="0" step="0.50" style="width: 80px; padding: 2px;" oninput="calcularTotalModal()">
+                        <input type="number" name="desconto" id="inputDesconto" value="0" step="0.50"
+                            style="width: 80px; padding: 2px;" oninput="calcularTotalModal()">
                     </div>
                     <div class="linha-resumo total-destaque">
                         <span>Total Final:</span>
@@ -300,13 +494,13 @@
         let taxaPercentual = 0;
 
         function toggleMenu() { var el = document.getElementById("sidebar"); el.style.width = el.style.width === "250px" ? "0" : "250px"; }
-        
+
         function abrirAba(nome) {
             // --- TRAVA DE SEGURANÇA PARA A ABA FECHAMENTO ---
             if (nome === 'fechamento') {
                 // Pergunta a senha usando o prompt padrão do navegador (Simples e Seguro contra bugs visuais)
                 let senhaDigitada = prompt("🔒 Área Restrita: Gestão Financeira\n\nPor favor, digite a senha de Gerente:");
-                
+
                 // Se cancelar ou digitar errado
                 if (senhaDigitada === null) return; // Cancelou
                 if (senhaDigitada !== "{{ senha_admin }}") {
@@ -317,13 +511,13 @@
             // ------------------------------------------------
 
             var conteudos = document.getElementsByClassName("conteudo-aba");
-            for(var i=0; i<conteudos.length; i++) conteudos[i].style.display = "none";
+            for (var i = 0; i < conteudos.length; i++) conteudos[i].style.display = "none";
             var botoes = document.getElementsByClassName("aba-btn");
-            for(var i=0; i<botoes.length; i++) botoes[i].classList.remove("ativa");
+            for (var i = 0; i < botoes.length; i++) botoes[i].classList.remove("ativa");
             document.getElementById(nome).style.display = "block";
-            document.getElementById("btn-"+nome).classList.add("ativa");
+            document.getElementById("btn-" + nome).classList.add("ativa");
         }
-        
+
         function toggleDetalhes(id) {
             var row = document.getElementById(id);
             row.style.display = row.style.display === "table-row" ? "none" : "table-row";
@@ -338,7 +532,7 @@
             area.style.display = "none";
             area.innerHTML = "";
         }
-        
+
         function abrirModalPagamento(mesa, subtotal, taxa) {
             subtotalAtual = parseFloat(subtotal);
             taxaPercentual = parseFloat(taxa);
@@ -363,7 +557,7 @@
         function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function editarProduto(id, nome, preco, cat, desc) {
-            window.scrollTo(0,0);
+            window.scrollTo(0, 0);
             abrirAba('produtos');
             document.getElementById('tituloFormProduto').innerText = "Editar Produto: " + nome;
             document.getElementById('acaoProduto').value = "editar";
@@ -386,31 +580,48 @@
             document.getElementById('btnSalvarProd').style.background = "";
             document.getElementById('btnCancelarEdicao').style.display = "none";
         }
-        
-        // Pega assinatura inicial
-        fetch('/api/admin_stats?t=' + Date.now()).then(r=>r.json()).then(data=>{ assinaturaAdmin = data.assinatura; });
 
-        setInterval(function() {
+        // Pega assinatura inicial
+        fetch('/api/admin_stats?t=' + Date.now()).then(r => r.json()).then(data => { assinaturaAdmin = data.assinatura; });
+
+        setInterval(function () {
             // Só verifica se a aba de Comandas (Caixa) estiver visível
-            if(document.getElementById('comandas').style.display !== 'none'){
-                
+            if (document.getElementById('comandas').style.display !== 'none') {
+
                 // O '?t=' + Date.now() obriga o navegador a buscar dados frescos
-                fetch('/api/admin_stats?t=' + Date.now()).then(r=>r.json()).then(data=>{
-                    
+                fetch('/api/admin_stats?t=' + Date.now()).then(r => r.json()).then(data => {
+
                     if (assinaturaAdmin !== "" && data.assinatura !== assinaturaAdmin) {
                         console.log("Mudança detectada! Atualizando...");
-                        
+
                         // Só recarrega se NÃO estiver com a janelinha de pagamento aberta
-                        if(document.getElementById('modalPagamento').style.display === 'none') {
+                        if (document.getElementById('modalPagamento').style.display === 'none') {
                             window.location.reload();
                         }
                     }
                 });
             }
         }, 2000); // Mudei para 2 segundos para ficar mais rápido
-        
+
         const params = new URLSearchParams(window.location.search);
         abrirAba(params.get('tab') || 'comandas');
+    </script>
+
+    <script>
+        // Esse script impede que links abram o Safari externo no iOS
+        if (("standalone" in window.navigator) && window.navigator.standalone) {
+            var a = document.getElementsByTagName("a");
+            for (var i = 0; i < a.length; i++) {
+                a[i].addEventListener("click", function (event) {
+                    var newLocation = this.getAttribute("href");
+                    // Só aplica se for link real e não javascript:void(0)
+                    if (newLocation && newLocation.startsWith('/')) {
+                        event.preventDefault();
+                        window.location = newLocation;
+                    }
+                }, false);
+            }
+        }
     </script>
 </body>
 </html>

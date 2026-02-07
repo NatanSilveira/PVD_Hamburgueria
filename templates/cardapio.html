@@ -1,32 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mesa {{ mesa }} - Dom Burguer</title>
-    
+
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Dom Burguer">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <audio id="som_pronto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-    
+
     <style>
         /* CORREÇÃO PARA CELULAR (Mantida e melhorada) */
         @media (max-width: 600px) {
-            .logo-mini { width: auto !important; flex: 0 0 auto !important; }
-            .texto-logo { display: none !important; }
-            .controles-mini { width: 100% !important; justify-content: space-between !important; padding-left: 10px; }
-            .input-group-mini { max-width: 48% !important; flex: 1 !important; min-width: 0 !important; }
-            .input-mini { width: 100% !important; text-overflow: ellipsis; }
+            .logo-mini {
+                width: auto !important;
+                flex: 0 0 auto !important;
+            }
+
+            .texto-logo {
+                display: none !important;
+            }
+
+            .controles-mini {
+                width: 100% !important;
+                justify-content: space-between !important;
+                padding-left: 10px;
+            }
+
+            .input-group-mini {
+                max-width: 48% !important;
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+
+            .input-mini {
+                width: 100% !important;
+                text-overflow: ellipsis;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <div id="sidebar" class="sidebar">
@@ -42,7 +64,7 @@
             <span class="material-icons menu-btn" onclick="toggleMenu()">menu</span>
             <span class="texto-logo">DOM BURGUER</span>
         </div>
-        
+
         <div id="aviso-global" class="aviso-topo" style="display: none;" onclick="irParaMesaPronta()">
             <span class="material-icons">notifications_active</span>
             <span id="texto-aviso-global"></span>
@@ -51,80 +73,88 @@
         <div class="controles-mini">
             <div class="input-group-mini">
                 <label>Mesa</label>
-                <select id="select-mesa" onchange="mudarMesa()" class="input-mini" style="background: #333; color: white; border: 1px solid #555;">
+                <select id="select-mesa" onchange="mudarMesa()" class="input-mini"
+                    style="background: #333; color: white; border: 1px solid #555;">
                     <option value="{{ mesa }}" selected>Mesa {{ mesa }}</option>
                     <option disabled>--- Abertas ---</option>
                     {% for m in mesas_ativas %}
-                        {% if m.id != mesa %}
-                        <option value="{{ m.id }}">{{ m.id }} - {{ m.cliente }}</option>
-                        {% endif %}
+                    {% if m.id != mesa %}
+                    <option value="{{ m.id }}">{{ m.id }} - {{ m.cliente }}</option>
+                    {% endif %}
                     {% endfor %}
                     <option disabled>--- Opções ---</option>
                     <option value="nova">Nova Mesa...</option>
                 </select>
             </div>
-            
+
             <div class="input-group-mini">
-                <label><span class="material-icons" style="font-size: 14px; vertical-align: middle;">person</span> Cliente</label>
+                <label><span class="material-icons" style="font-size: 14px; vertical-align: middle;">person</span>
+                    Cliente</label>
                 <input type="text" id="input-cliente" value="{{ cliente }}" placeholder="Nome..." class="input-mini">
             </div>
         </div>
     </header>
 
     <div class="main-content">
-        
-        <div id="alerta-pronto" class="alerta-flutuante" style="display:none; flex-direction: column; align-items: flex-start; gap: 10px; width: 90%; left: 5%;">
+
+        <div id="alerta-pronto" class="alerta-flutuante"
+            style="display:none; flex-direction: column; align-items: flex-start; gap: 10px; width: 90%; left: 5%;">
             <div style="font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
-                <span class="material-icons" style="background: white; color: #FF9800; border-radius: 50%; padding: 5px;">restaurant</span>
+                <span class="material-icons"
+                    style="background: white; color: #FF9800; border-radius: 50%; padding: 5px;">restaurant</span>
                 Pedido desta Mesa Pronto!
             </div>
-            <a href="/garcom_confirma/{{ mesa }}" class="btn-padrao bg-green" style="text-decoration: none; width: 100%; text-align: center; padding: 12px 0; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            <a href="/garcom_confirma/{{ mesa }}" class="btn-padrao bg-green"
+                style="text-decoration: none; width: 100%; text-align: center; padding: 12px 0; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
                 ✅ JÁ PEGUEI / SERVIDO
             </a>
         </div>
 
         {% if ativos %}
-        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #FF9800;">
-            <h3 style="margin-top: 0; color: #444; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between;">
+        <div
+            style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #FF9800;">
+            <h3
+                style="margin-top: 0; color: #444; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between;">
                 <span>⏳ Acompanhamento</span>
                 <span style="font-weight: normal; font-size: 0.9rem; color: #777;">{{ cliente }}</span>
             </h3>
             <ul style="list-style: none; padding: 0;">
                 {% for item in ativos %}
-                    <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee;">
-                        <span style="font-size: 0.95rem;">{{ item.produto_nome }}</span>
-                        <span class="text-{{ item.status|lower }}">
-                            {% if item.status == 'Pronto' %} 🔔 PRONTO {% else %} {{ item.status }} {% endif %}
-                        </span>
-                    </li>
+                <li
+                    style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee;">
+                    <span style="font-size: 0.95rem;">{{ item.produto_nome }}</span>
+                    <span class="text-{{ item.status|lower }}">
+                        {% if item.status == 'Pronto' %} 🔔 PRONTO {% else %} {{ item.status }} {% endif %}
+                    </span>
+                </li>
                 {% endfor %}
             </ul>
         </div>
         {% endif %}
 
         {% for nome_categoria, itens in categorias.items() %}
-            <h2 class="titulo-categoria">{{ nome_categoria }}</h2>
-            <div class="grid-produtos">
-                {% for item in itens %}
-                <form action="/adicionar_item" method="POST" class="card-produto" onsubmit="prepararEnvio(this)">
-                    <input type="hidden" name="mesa" value="{{ mesa }}">
-                    <input type="hidden" name="cliente_nome" class="hidden-cliente">
-                    <input type="hidden" name="nome_produto" value="{{ item.nome }}">
-                    <input type="hidden" name="preco" value="{{ item.preco }}">
-                    <input type="hidden" name="categoria_produto" value="{{ item.cat }}">
-                    
-                    <div class="info-produto">
-                        <strong>{{ item.nome }}</strong>
-                        <small>{{ item.desc }}</small>
-                        <span class="preco">R$ {{ item.preco }}</span>
-                    </div>
-                    <div class="acoes-produto">
-                        <input type="text" name="observacao" class="input-obs" placeholder="Obs...">
-                        <button type="submit" class="btn-add"><span class="material-icons">add</span></button>
-                    </div>
-                </form>
-                {% endfor %}
-            </div>
+        <h2 class="titulo-categoria">{{ nome_categoria }}</h2>
+        <div class="grid-produtos">
+            {% for item in itens %}
+            <form action="/adicionar_item" method="POST" class="card-produto" onsubmit="prepararEnvio(this)">
+                <input type="hidden" name="mesa" value="{{ mesa }}">
+                <input type="hidden" name="cliente_nome" class="hidden-cliente">
+                <input type="hidden" name="nome_produto" value="{{ item.nome }}">
+                <input type="hidden" name="preco" value="{{ item.preco }}">
+                <input type="hidden" name="categoria_produto" value="{{ item.cat }}">
+
+                <div class="info-produto">
+                    <strong>{{ item.nome }}</strong>
+                    <small>{{ item.desc }}</small>
+                    <span class="preco">R$ {{ item.preco }}</span>
+                </div>
+                <div class="acoes-produto">
+                    <input type="text" name="observacao" class="input-obs" placeholder="Obs...">
+                    <button type="submit" class="btn-add"><span class="material-icons">add</span></button>
+                </div>
+            </form>
+            {% endfor %}
+        </div>
         {% endfor %}
         <div style="height: 120px;"></div>
     </div>
@@ -136,33 +166,31 @@
         </div>
         <div id="lista-carrinho" class="conteudo-carrinho {% if carrinho_aberto %}aberto{% endif %}">
             {% if carrinho|length == 0 %}
-                <p style="text-align: center; color: #666; padding-top: 20px;">Comanda vazia.</p>
+            <p style="text-align: center; color: #666; padding-top: 20px;">Comanda vazia.</p>
             {% else %}
-                <ul class="lista-itens-carrinho">
-                    {% for p in carrinho %}
-                    <li>
-                        <div><strong>{{ p.produto_nome }}</strong> <small>{{ p.observacao }}</small></div>
-                        <div style="display: flex; align-items: center;">
-                            R$ {{ p.preco }}
-                            <a href="/cancelar_item/{{ p.id }}" class="btn-remove"><span class="material-icons">close</span></a>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
-                <a href="/enviar_cozinha/{{ mesa }}" class="btn-enviar-cozinha">ENVIAR PEDIDO 🚀</a>
+            <ul class="lista-itens-carrinho">
+                {% for p in carrinho %}
+                <li>
+                    <div><strong>{{ p.produto_nome }}</strong> <small>{{ p.observacao }}</small></div>
+                    <div style="display: flex; align-items: center;">
+                        R$ {{ p.preco }}
+                        <a href="/cancelar_item/{{ p.id }}" class="btn-remove"><span
+                                class="material-icons">close</span></a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="/enviar_cozinha/{{ mesa }}" class="btn-enviar-cozinha">ENVIAR PEDIDO 🚀</a>
             {% endif %}
         </div>
     </div>
 
-    <div id="dados-sistema" 
-         data-mesa="{{ mesa }}" 
-         data-qtd-ativos="{{ ativos|length }}" 
-         data-qtd-carrinho="{{ carrinho|length }}" 
-         style="display: none;">
+    <div id="dados-sistema" data-mesa="{{ mesa }}" data-qtd-ativos="{{ ativos|length }}"
+        data-qtd-carrinho="{{ carrinho|length }}" style="display: none;">
     </div>
 
     <script>
-        let assinaturaAtual = ""; 
+        let assinaturaAtual = "";
         let mesasProntasGlobais = [];
 
         function toggleMenu() {
@@ -172,7 +200,7 @@
         function toggleCarrinho() {
             document.getElementById("lista-carrinho").classList.toggle("aberto");
         }
-        
+
         function mudarMesa() {
             var valor = document.getElementById('select-mesa').value;
             if (valor === 'nova') {
@@ -183,41 +211,41 @@
                 window.location.href = '/?mesa=' + valor;
             }
         }
-        
+
         function prepararEnvio(form) {
             var dados = document.getElementById('dados-sistema').dataset;
             var nome = document.getElementById('input-cliente').value;
             form.querySelector('.hidden-cliente').value = nome;
             localStorage.setItem('cliente_mesa_' + dados.mesa, nome);
         }
-        
+
         function irParaMesaPronta() {
-            if(mesasProntasGlobais.length > 0) {
+            if (mesasProntasGlobais.length > 0) {
                 window.location.href = '/?mesa=' + mesasProntasGlobais[0];
             }
         }
 
-        window.onload = function() {
+        window.onload = function () {
             var dados = document.getElementById('dados-sistema').dataset;
-            var mesaID = dados.mesa; 
-            
+            var mesaID = dados.mesa;
+
             var qtdTotal = parseInt(dados.qtdAtivos) + parseInt(dados.qtdCarrinho);
             var input = document.getElementById('input-cliente');
-            
+
             if (qtdTotal === 0) {
                 localStorage.removeItem('cliente_mesa_' + mesaID);
-                input.value = ""; 
+                input.value = "";
             } else {
-                if(input.value === "") {
+                if (input.value === "") {
                     var salvo = localStorage.getItem('cliente_mesa_' + mesaID);
-                    if(salvo) input.value = salvo;
+                    if (salvo) input.value = salvo;
                 }
             }
 
             fetch('/api/status_mesa/' + mesaID).then(r => r.json()).then(data => { assinaturaAtual = data.assinatura; });
         }
 
-        setInterval(function() {
+        setInterval(function () {
             var dados = document.getElementById('dados-sistema').dataset;
             var mesaID = dados.mesa;
 
@@ -225,14 +253,14 @@
             fetch('/api/mesas_prontas').then(r => r.json()).then(data => {
                 var aviso = document.getElementById('aviso-global');
                 mesasProntasGlobais = data.mesas_prontas;
-                
+
                 if (data.mesas_prontas.length > 0) {
                     aviso.style.display = 'flex';
                     document.getElementById('texto-aviso-global').innerText = "PRONTO: Mesa " + data.mesas_prontas.join(", ");
-                    
+
                     var alertaLocal = document.getElementById('alerta-pronto');
-                    if(alertaLocal.style.display == 'none') {
-                         document.getElementById('som_pronto').play().catch(e => {});
+                    if (alertaLocal.style.display == 'none') {
+                        document.getElementById('som_pronto').play().catch(e => { });
                     }
                 } else {
                     aviso.style.display = 'none';
@@ -258,5 +286,22 @@
             });
         }, 3000);
     </script>
+    <script>
+        // Esse script impede que links abram o Safari externo no iOS
+        if (("standalone" in window.navigator) && window.navigator.standalone) {
+            var a = document.getElementsByTagName("a");
+            for (var i = 0; i < a.length; i++) {
+                a[i].addEventListener("click", function (event) {
+                    var newLocation = this.getAttribute("href");
+                    // Só aplica se for link real e não javascript:void(0)
+                    if (newLocation && newLocation.startsWith('/')) {
+                        event.preventDefault();
+                        window.location = newLocation;
+                    }
+                }, false);
+            }
+        }
+    </script>
 </body>
+
 </html>
