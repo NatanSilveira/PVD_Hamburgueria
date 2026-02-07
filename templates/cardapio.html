@@ -2,37 +2,28 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mesa {{ mesa }} - Dom Burguer</title>
+    
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dom Burguer">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <audio id="som_pronto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+    
     <style>
-        /* CORREÇÃO PARA CELULAR: ESCONDER NOME E AJUSTAR LARGURAS */
+        /* CORREÇÃO PARA CELULAR (Mantida e melhorada) */
         @media (max-width: 600px) {
-            .logo-mini { 
-                width: auto !important; 
-                flex: 0 0 auto !important;
-            }
-            .texto-logo { display: none !important; } /* Esconde 'DOM BURGUER' no celular */
-            
-            .controles-mini {
-                width: 100% !important;
-                justify-content: space-between !important;
-                padding-left: 10px;
-            }
-            
-            .input-group-mini {
-                max-width: 48% !important; /* Cada campo pega quase metade da tela */
-                flex: 1 !important;
-                min-width: 0 !important; /* Permite encolher se necessário */
-            }
-            
-            /* Ajuste fino para os inputs ficarem alinhados */
-            .input-mini {
-                width: 100% !important;
-                text-overflow: ellipsis;
-            }
+            .logo-mini { width: auto !important; flex: 0 0 auto !important; }
+            .texto-logo { display: none !important; }
+            .controles-mini { width: 100% !important; justify-content: space-between !important; padding-left: 10px; }
+            .input-group-mini { max-width: 48% !important; flex: 1 !important; min-width: 0 !important; }
+            .input-mini { width: 100% !important; text-overflow: ellipsis; }
         }
     </style>
 </head>
