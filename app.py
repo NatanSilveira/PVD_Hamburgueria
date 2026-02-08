@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from datetime import datetime, date
+from datetime import datetime, date, timedelta  # <--- Adicione timedelta aqui
 import time
 
 app = Flask(__name__)
@@ -224,6 +224,28 @@ def api_admin_stats():
 # --- ADMIN E FECHAMENTO ---
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
+    # --- LÓGICA DO DIA COMERCIAL (O Pulo do Gato 😺) ---
+    # Define que o dia só vira às 06:00 da manhã
+    HORA_VIRADA = 6 
+    
+    # Se não escolheu data no filtro...
+    data_filtro_str = request.args.get('data')
+    if data_filtro_str:
+        data_filtro = datetime.strptime(data_filtro_str, '%Y-%m-%d').date()
+    else:
+        # Se for antes das 06:00 da manhã, mostra o dia de ONTEM
+        agora = datetime.now()
+        if agora.hour < HORA_VIRADA:
+            data_filtro = date.today() - timedelta(days=1)
+        else:
+            data_filtro = date.today()
+
+    # Define o inicio e fim do turno (Das 06:00 de hoje até as 05:59 de amanhã)
+    inicio_turno = datetime.combine(data_filtro, datetime.min.time()) + timedelta(hours=HORA_VIRADA)
+    fim_turno = inicio_turno + timedelta(days=1)
+
+    # ---------------------------------------------------
+
     if request.method == 'POST':
         # 1. Ajuste de Taxa
         if 'taxa_servico' in request.form:
@@ -232,11 +254,9 @@ def admin():
             db.session.commit()
             return redirect('/admin?tab=ajustes')
         
-        # 2. Gestão de Produtos (Adicionar ou Editar)
+        # 2. Gestão de Produtos
         elif 'nome' in request.form:
-            acao = request.form.get('acao') # Pega o campo hidden 'acao'
-            
-            # --- CASO ADICIONAR ---
+            acao = request.form.get('acao')
             if acao == 'adicionar':
                 db.session.add(Produto(
                     nome=request.form['nome'], 
@@ -246,8 +266,6 @@ def admin():
                 ))
                 db.session.commit()
                 return redirect('/admin?tab=produtos')
-
-            # --- CASO EDITAR ---
             elif acao == 'editar':
                 prod_id = request.form.get('produto_id')
                 prod = Produto.query.get(prod_id)
@@ -262,6 +280,7 @@ def admin():
     produtos = Produto.query.all()
     config = Configuracao.query.first()
     
+    # PEGA PEDIDOS ABERTOS (Independentemente da hora, pois estão abertos)
     pedidos_abertos = Pedido.query.filter(Pedido.status.in_(['Pendente', 'Preparando', 'Pronto', 'Entregue'])).all()
     mesas_abertas = {}
     for p in pedidos_abertos:
@@ -273,16 +292,11 @@ def admin():
         m['taxa_sugerida'] = m['subtotal'] * (config.taxa_servico / 100)
         m['total_estimado'] = m['subtotal'] + m['taxa_sugerida']
 
-    data_filtro_str = request.args.get('data')
-    if data_filtro_str:
-        data_filtro = datetime.strptime(data_filtro_str, '%Y-%m-%d').date()
-    else:
-        data_filtro = date.today()
-
+    # FILTRA O HISTÓRICO USANDO O HORÁRIO COMERCIAL (06h às 06h)
     pedidos_pagos = Pedido.query.filter(
         Pedido.status == 'Pago', 
-        Pedido.data_hora >= datetime.combine(data_filtro, datetime.min.time()),
-        Pedido.data_hora <= datetime.combine(data_filtro, datetime.max.time())
+        Pedido.data_hora >= inicio_turno,
+        Pedido.data_hora < fim_turno
     ).order_by(Pedido.data_hora.desc()).all()
     
     historico_pagamentos = {}
